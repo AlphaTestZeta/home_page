@@ -758,6 +758,9 @@
             let credits = 200;
             let betAmount = 10;
             let isSpinning = false;
+			let cheatJackpot = false;
+			document.addEventListener('keydown', e => { if (e.key === 'j' || e.key === 'J') cheatJackpot = true; });
+			document.addEventListener('keyup',   e => { if (e.key === 'j' || e.key === 'J') cheatJackpot = false; });
             
             // Simboli possibili
             const symbols = ['🍒', '🍋', '🍇', '🍊', '🍎', '🔔', '💎'];
@@ -926,7 +929,7 @@
                     setTimeout(() => {
                         clearInterval(interval);
                         reel.classList.remove('spinning');
-                        const finalSymbol = getRandomSymbol();
+                        const finalSymbol = cheatJackpot ? '💎' : getRandomSymbol();
                         reel.textContent = finalSymbol;
                         resolve(finalSymbol);
                     }, duration);

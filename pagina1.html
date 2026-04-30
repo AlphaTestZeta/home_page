@@ -589,6 +589,7 @@
     </style>
 </head>
 <body>
+	<audio id="jackpot" src="Ode To Joy BB.wav"></audio>
     <div class="container">
         <h1>Slot Machine Vivace</h1>
         
@@ -775,14 +776,17 @@
                     // Super jackpot per tre diamanti
                     if (s1 === '💎') {
                         return { win: true, amount: betAmount * 20, type: 'Super Jackpot' };
+						document.getElementById('jackpot').play();
                     }
                     // Jackpot speciale per tre campane
                     else if (s1 === '🔔') {
                         return { win: true, amount: betAmount * 15, type: 'Jackpot' };
+						document.getElementById('jackpot').play();
                     }
                     // Jackpot normale per altri tre simboli uguali
                     else {
                         return { win: true, amount: betAmount * 10, type: 'Jackpot' };
+						document.getElementById('jackpot').play();
                     }
                 }
                 // Verifica due simboli uguali

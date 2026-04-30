@@ -51,6 +51,26 @@
             0%, 100% { opacity: 0.4; }
             50% { opacity: 0.7; }
         }
+
+        .coriandolo {
+            position: fixed;
+            opacity: 1;
+            animation: vola 2.5s ease-out forwards;
+            pointer-events: none;
+            z-index: 9999;
+            border-radius: 2px;
+        }
+
+        @keyframes vola {
+            0% {
+                transform: translateY(0) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-110vh) rotate(720deg) scale(0.5);
+                opacity: 0;
+            }
+        }
         
         h1 {
             font-family: 'Bebas Neue', sans-serif;
@@ -767,6 +787,33 @@
                 return weightedSymbols[Math.floor(Math.random() * weightedSymbols.length)];
             }
             
+            // Funzione coriandoli
+            function lanciaCoriandoli() {
+                const colori = ['#FFD700', '#FFC200', '#FFB300', '#FFAA00', '#FF8C00', '#FFF8DC', '#FFFACD'];
+                const totale = 600;
+
+                for (let i = 0; i < totale; i++) {
+                    setTimeout(() => {
+                        const c = document.createElement('div');
+                        c.classList.add('coriandolo');
+                        c.style.backgroundColor = colori[Math.floor(Math.random() * colori.length)];
+                        const daSinistra = Math.random() < 0.5;
+                        c.style.left = daSinistra
+                            ? Math.random() * 30 + 'vw'
+                            : Math.random() * 30 + 70 + 'vw';
+                        c.style.bottom = '0';
+                        c.style.top = 'auto';
+                        const durata = 1.5 + Math.random() * 2;
+                        c.style.animationDuration = durata + 's';
+                        c.style.animationDelay = Math.random() * 1.5 + 's';
+                        c.style.width = 6 + Math.random() * 12 + 'px';
+                        c.style.height = 8 + Math.random() * 16 + 'px';
+                        document.body.appendChild(c);
+                        setTimeout(() => c.remove(), (durata + 1.5) * 1000);
+                    }, i * 3);
+                }
+            }
+
             // Funzione per controllare le vincite
             function checkWin(symbols) {
                 const [s1, s2, s3] = symbols;
@@ -774,6 +821,7 @@
                 // Verifica jackpot (tre simboli uguali)
                 if (s1 === s2 && s2 === s3) {
                     document.getElementById('jackpot-sound').play();
+                    lanciaCoriandoli();
                     // Super jackpot per tre diamanti
                     if (s1 === '💎') {
                         return { win: true, amount: betAmount * 20, type: 'Super Jackpot' };

@@ -793,11 +793,10 @@
             // Funzione coriandoli
             function lanciaCoriandoli() {
                 const colori = ['#FFD700', '#FFC200', '#FFB300', '#FFAA00', '#FF8C00', '#FFF8DC', '#FFFACD', '#FFE55C', '#FFDD00'];
-                const totale = 800;
-                const durataTotale = 35000; // 35 secondi
+                const totale = 2500;
+                const durataTotale = 35000;
 
                 for (let i = 0; i < totale; i++) {
-                    // Spalma i lanci su tutti i 35 secondi
                     const ritardoLancio = Math.random() * durataTotale;
 
                     setTimeout(() => {
@@ -805,30 +804,25 @@
                         c.classList.add('coriandolo');
                         c.style.backgroundColor = colori[Math.floor(Math.random() * colori.length)];
 
-                        // Durata singolo coriandolo: tra 3 e 7 secondi
-                        const durata = 3 + Math.random() * 4;
+                        // Durata più veloce: 1-2.5 secondi
+                        const durata = 1 + Math.random() * 1.5;
                         c.style.setProperty('--durata', durata + 's');
 
-                        // Parte dal lato sinistro o destro, lungo tutta l'altezza
                         const daSinistra = Math.random() < 0.5;
                         const startX = daSinistra
-                            ? Math.random() * 15   // 0-15% da sinistra
-                            : 85 + Math.random() * 15; // 85-100% da destra
-                        const startY = 60 + Math.random() * 40; // parte dal basso (60-100% dall'alto)
+                            ? Math.random() * 15
+                            : 85 + Math.random() * 15;
+                        const startY = 60 + Math.random() * 40;
 
                         c.style.left = startX + 'vw';
                         c.style.top = startY + 'vh';
 
-                        // Direzione diagonale verso il centro in alto
-                        const centerX = 50; // centro schermo
-                        const targetX = centerX + (Math.random() - 0.5) * 60; // arriva vicino al centro con variazione
-                        const targetY = -(10 + Math.random() * 40); // arriva in alto fuori dallo schermo
+                        const centerX = 50;
+                        const targetX = centerX + (Math.random() - 0.5) * 60;
+                        const targetY = -(10 + Math.random() * 40);
 
-                        const dx = (targetX - startX) + 'vw';
-                        const dy = (targetY - startY) + 'vh';
-
-                        c.style.setProperty('--dx', dx);
-                        c.style.setProperty('--dy', dy);
+                        c.style.setProperty('--dx', (targetX - startX) + 'vw');
+                        c.style.setProperty('--dy', (targetY - startY) + 'vh');
 
                         c.style.width = 6 + Math.random() * 14 + 'px';
                         c.style.height = 8 + Math.random() * 18 + 'px';
@@ -920,6 +914,9 @@
             // Funzione principale per far girare i rulli
             async function spin() {
                 if (isSpinning || credits < betAmount) return;
+
+                document.getElementById('button-sound').currentTime = 0;
+                document.getElementById('button-sound').play();
                 
                 isSpinning = true;
                 messageDisplay.textContent = '';
@@ -927,11 +924,19 @@
                 // Sottrai la puntata dai crediti
                 credits -= betAmount;
                 updateUI();
+
+                // Suono rullo
+                const rulloSound = document.getElementById('rullo-sound');
+                rulloSound.currentTime = 0;
+                rulloSound.play();
                 
                 // Fai girare i rulli con tempi leggermente diversi
                 const symbol1 = await spinReel(reel1, 1000);
                 const symbol2 = await spinReel(reel2, 1500);
                 const symbol3 = await spinReel(reel3, 2000);
+
+                rulloSound.pause();
+                rulloSound.currentTime = 0;
                 
                 // Controlla le vincite
                 const result = checkWin([symbol1, symbol2, symbol3]);
@@ -977,5 +982,7 @@
         });
     </script>
     <audio id="jackpot-sound" src="OdeToJoy.mp3"></audio>
+    <audio id="button-sound" src="Button.mp3"></audio>
+    <audio id="rullo-sound" src="Rullo.mp3" loop></audio>
 </body>
 </html>

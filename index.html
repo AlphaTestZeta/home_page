@@ -2,28 +2,149 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
-    .btn {
-      display: inline-block;
-      margin: 10px;
-      padding: 15px 30px;
-      background-color: #0070f3;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-      font-size: 18px;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #f5f3ee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px;
     }
-    .btn:hover { background-color: #005bb5; }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      color: #1a1a1a;
+      text-align: center;
+      margin-bottom: 12px;
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: #888;
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .cards {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 900px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      width: 340px;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.13);
+    }
+
+    .card-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      display: block;
+      background: #e8e4dc; /* fallback se l'immagine non carica */
+    }
+
+    .card-body {
+      padding: 24px 28px 28px;
+    }
+
+    .card-tag {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #b07d4a;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem;
+      color: #1a1a1a;
+      margin-bottom: 10px;
+    }
+
+    .card-desc {
+      font-size: 0.92rem;
+      color: #888;
+      line-height: 1.6;
+      margin-bottom: 22px;
+    }
+
+    .card-btn {
+      display: inline-block;
+      padding: 10px 22px;
+      background: #1a1a1a;
+      color: #fff;
+      border-radius: 50px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      transition: background 0.2s;
+    }
+
+    .card:hover .card-btn {
+      background: #b07d4a;
+    }
   </style>
 </head>
 <body>
-  <h1>Benvenuto nel mio sito</h1>
-  <p>Scegli una sezione:</p>
 
-  <a class="btn" href="pagina1.html">Pagina 1</a>
-  <a class="btn" href="pagina2.html">Pagina 2</a>
-  <a class="btn" href="pagina3.html">Pagina 3</a>
+  <h1>Main//</h1>
+  <p class="subtitle">Scegli dove vuoi andare</p>
+
+  <div class="cards">
+
+    <!-- CARD 1 -->
+    <a class="card" href="pagina1.html">
+      <!--
+        Sostituisci l'src con un'immagine a tua scelta.
+        Puoi usare un'immagine caricata nella repo (es. "immagini/foto1.jpg")
+        oppure un link esterno.
+      -->
+      <img class="card-img" src="SlotMachine.jpg" alt="Pagina 1">
+      <div class="card-body">
+        <p class="card-tag">01</p>
+        <h2 class="card-title">"Freaky" Slot Machine</h2>
+        <p class="card-desc">Absolute cano freaky machine!!!</p>
+        <span class="card-btn">Vai →</span>
+      </div>
+    </a>
+
+    <!-- CARD 2 -->
+    <a class="card" href="pagina2.html">
+      <img class="card-img" src="love.jpeg" alt="Pagina 2">
+      <div class="card-body">
+        <p class="card-tag">02</p>
+        <h2 class="card-title">Free gift</h2>
+        <p class="card-desc">Piccolo dono per chi visita il sito :3</p>
+        <span class="card-btn">Vai →</span>
+      </div>
+    </a>
+
+  </div>
+
 </body>
 </html>

@@ -55,19 +55,22 @@
         .coriandolo {
             position: fixed;
             opacity: 1;
-            animation: vola 2.5s ease-out forwards;
             pointer-events: none;
             z-index: 9999;
             border-radius: 2px;
+            animation: vola var(--durata) ease-out forwards;
         }
 
         @keyframes vola {
             0% {
-                transform: translateY(0) rotate(0deg) scale(1);
+                transform: translate(0, 0) rotate(0deg) scale(0.8);
+                opacity: 1;
+            }
+            80% {
                 opacity: 1;
             }
             100% {
-                transform: translateY(-110vh) rotate(720deg) scale(0.5);
+                transform: translate(var(--dx), var(--dy)) rotate(900deg) scale(1.5);
                 opacity: 0;
             }
         }
@@ -789,28 +792,50 @@
             
             // Funzione coriandoli
             function lanciaCoriandoli() {
-                const colori = ['#FFD700', '#FFC200', '#FFB300', '#FFAA00', '#FF8C00', '#FFF8DC', '#FFFACD'];
-                const totale = 600;
+                const colori = ['#FFD700', '#FFC200', '#FFB300', '#FFAA00', '#FF8C00', '#FFF8DC', '#FFFACD', '#FFE55C', '#FFDD00'];
+                const totale = 800;
+                const durataTotale = 35000; // 35 secondi
 
                 for (let i = 0; i < totale; i++) {
+                    // Spalma i lanci su tutti i 35 secondi
+                    const ritardoLancio = Math.random() * durataTotale;
+
                     setTimeout(() => {
                         const c = document.createElement('div');
                         c.classList.add('coriandolo');
                         c.style.backgroundColor = colori[Math.floor(Math.random() * colori.length)];
+
+                        // Durata singolo coriandolo: tra 3 e 7 secondi
+                        const durata = 3 + Math.random() * 4;
+                        c.style.setProperty('--durata', durata + 's');
+
+                        // Parte dal lato sinistro o destro, lungo tutta l'altezza
                         const daSinistra = Math.random() < 0.5;
-                        c.style.left = daSinistra
-                            ? Math.random() * 30 + 'vw'
-                            : Math.random() * 30 + 70 + 'vw';
-                        c.style.bottom = '0';
-                        c.style.top = 'auto';
-                        const durata = 1.5 + Math.random() * 2;
-                        c.style.animationDuration = durata + 's';
-                        c.style.animationDelay = Math.random() * 1.5 + 's';
-                        c.style.width = 6 + Math.random() * 12 + 'px';
-                        c.style.height = 8 + Math.random() * 16 + 'px';
+                        const startX = daSinistra
+                            ? Math.random() * 15   // 0-15% da sinistra
+                            : 85 + Math.random() * 15; // 85-100% da destra
+                        const startY = 60 + Math.random() * 40; // parte dal basso (60-100% dall'alto)
+
+                        c.style.left = startX + 'vw';
+                        c.style.top = startY + 'vh';
+
+                        // Direzione diagonale verso il centro in alto
+                        const centerX = 50; // centro schermo
+                        const targetX = centerX + (Math.random() - 0.5) * 60; // arriva vicino al centro con variazione
+                        const targetY = -(10 + Math.random() * 40); // arriva in alto fuori dallo schermo
+
+                        const dx = (targetX - startX) + 'vw';
+                        const dy = (targetY - startY) + 'vh';
+
+                        c.style.setProperty('--dx', dx);
+                        c.style.setProperty('--dy', dy);
+
+                        c.style.width = 6 + Math.random() * 14 + 'px';
+                        c.style.height = 8 + Math.random() * 18 + 'px';
+
                         document.body.appendChild(c);
-                        setTimeout(() => c.remove(), (durata + 1.5) * 1000);
-                    }, i * 3);
+                        setTimeout(() => c.remove(), durata * 1000 + 200);
+                    }, ritardoLancio);
                 }
             }
 

@@ -777,33 +777,28 @@
                     if (s1 === '💎') {
                         return { win: true, amount: betAmount * 20, type: 'Super Jackpot' };
 						document.getElementById('jackpot-sound').play();
-						.catch(e => console.log(e));
                     }
                     // Jackpot speciale per tre campane
                     else if (s1 === '🔔') {
                         return { win: true, amount: betAmount * 15, type: 'Jackpot' };
 						document.getElementById('jackpot-sound').play();
-						.catch(e => console.log(e));
                     }
                     // Jackpot normale per altri tre simboli uguali
                     else {
                         return { win: true, amount: betAmount * 10, type: 'Jackpot' };
 						document.getElementById('jackpot-sound').play();
-						.catch(e => console.log(e));
                     }
                 }
                 // Verifica due simboli uguali
                 else if (s1 === s2 || s2 === s3 || s1 === s3) {
                     return { win: true, amount: betAmount * 2, type: 'Coppia' };
 					document.getElementById('jackpot-sound').play();
-					.catch(e => console.log(e));
 					
                 }
                 
                 // Nessuna vincita
                 return { win: false, amount: 0, type: 'Nessuna vincita' };
 				document.getElementById('jackpot-sound').play();
-		.catch(e => console.log(e));
             }
             
             // Animazione per la vittoria del jackpot

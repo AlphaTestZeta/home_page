@@ -695,7 +695,7 @@
     </div>
     
     <div class="jackpot-animation" id="jackpotAnimation"></div>
-	<audio id="jackpot-sound" src="OdeToJoyBB.wav"></audio>
+	<audio id="jackpot-sound" src="OdeToJoyBB.mp3"></audio>
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -797,6 +797,7 @@
                 
                 // Nessuna vincita
                 return { win: false, amount: 0, type: 'Nessuna vincita' };
+				document.getElementById('jackpot-sound').play();
             }
             
             // Animazione per la vittoria del jackpot

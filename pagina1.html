@@ -934,9 +934,6 @@
                 const symbol1 = await spinReel(reel1, 1000);
                 const symbol2 = await spinReel(reel2, 1500);
                 const symbol3 = await spinReel(reel3, 2000);
-
-                rulloSound.pause();
-                rulloSound.currentTime = 0;
                 
                 // Controlla le vincite
                 const result = checkWin([symbol1, symbol2, symbol3]);
@@ -981,7 +978,7 @@
             updateUI();
         });
     </script>
-    <audio id="jackpot-sound" src="OdeToJoy.mp3"></audio>
+    <audio id="jackpot-sound" src="OdeToJoyBB.mp3"></audio>
     <audio id="button-sound" src="Button.mp3"></audio>
     <audio id="rullo-sound" src="Rullo.mp3" loop></audio>
 </body>

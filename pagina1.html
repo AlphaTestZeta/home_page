@@ -869,8 +869,8 @@
                 jackpotAnimation.innerHTML = '';
                 for (let i = 0; i < 100; i++) {
                     const particle = document.createElement('span');
-                    particle.style.left = Math.random() * 100 + '%';
-                    particle.style.top = Math.random() * 100 + '%';
+                    particle.style.left = Math.random() * 200 + '%';
+                    particle.style.top = Math.random() * 200 + '%';
                     particle.style.animationDelay = Math.random() * 2 + 's';
                     jackpotAnimation.appendChild(particle);
                 }
@@ -934,6 +934,9 @@
                 const symbol1 = await spinReel(reel1, 1000);
                 const symbol2 = await spinReel(reel2, 1500);
                 const symbol3 = await spinReel(reel3, 2000);
+
+                rulloSound.pause();
+                rulloSound.currentTime = 0;
                 
                 // Controlla le vincite
                 const result = checkWin([symbol1, symbol2, symbol3]);

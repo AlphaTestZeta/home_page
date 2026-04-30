@@ -52,6 +52,23 @@
             50% { opacity: 0.7; }
         }
 
+        #golden-flash {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: #FFD700;
+            opacity: 0.75;
+            pointer-events: none;
+            z-index: 9998;
+            animation: lampeggia 0.5s ease-in-out infinite;
+        }
+
+        @keyframes lampeggia {
+            0%, 100% { opacity: 0.75; }
+            50% { opacity: 0.50; }
+        }
+
         .coriandolo {
             position: fixed;
             opacity: 1;
@@ -796,6 +813,11 @@
                 const totale = 2500;
                 const durataTotale = 35000;
 
+                // Mostra il flash dorato
+                const flash = document.getElementById('golden-flash');
+                flash.style.display = 'block';
+                setTimeout(() => { flash.style.display = 'none'; }, durataTotale);
+
                 for (let i = 0; i < totale; i++) {
                     const ritardoLancio = Math.random() * durataTotale;
 
@@ -981,6 +1003,7 @@
             updateUI();
         });
     </script>
+    <div id="golden-flash"></div>
     <audio id="jackpot-sound" src="OdeToJoyBB.mp3"></audio>
     <audio id="button-sound" src="Button.mp3"></audio>
     <audio id="rullo-sound" src="Rullo.mp3" loop></audio>

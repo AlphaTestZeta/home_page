@@ -789,7 +789,6 @@
                 }
                 // Verifica due simboli uguali
                 else if (s1 === s2 || s2 === s3 || s1 === s3) {
-                    document.getElementById('jackpot-sound').play();
                     return { win: true, amount: betAmount * 2, type: 'Coppia' };
                 }
                 

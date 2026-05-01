@@ -1,0 +1,378 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  #app {
+    width: 100%; min-height: 620px; position: relative;
+    background: radial-gradient(ellipse at center, #2d6a2d 0%, #1a4a1a 60%, #0d2e0d 100%);
+    border-radius: 16px; overflow: hidden;
+    border: 6px solid #8B6914;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.4);
+  }
+  #felt-texture {
+    position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 1px, transparent 1px, transparent 4px);
+  }
+  #mute-btn {
+    position: absolute; top: 10px; right: 12px; z-index: 20;
+    background: rgba(0,0,0,0.45); border: 1.5px solid #8B6914;
+    border-radius: 8px; color: #FFD700; font-size: 18px;
+    width: 36px; height: 36px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: filter 0.15s;
+  }
+  #mute-btn:hover { filter: brightness(1.3); }
+  #sidebar {
+    position: absolute; left: 0; top: 0; bottom: 0; width: 155px;
+    background: rgba(0,0,0,0.45); border-right: 2px solid #8B6914;
+    display: flex; flex-direction: column; gap: 9px; padding: 12px 9px;
+    z-index: 10;
+  }
+  #budget-display {
+    background: #1a1a0a; border: 2px solid #8B6914; border-radius: 8px;
+    padding: 9px; text-align: center; color: #FFD700; letter-spacing: 1px;
+  }
+  #budget-display .amount { font-size: 22px; color: #FFE44D; font-family: Georgia,serif; font-weight: bold; }
+  .buy-btn {
+    width: 100%; border: none; border-radius: 8px; padding: 7px 5px;
+    cursor: pointer; font-family: 'Georgia', serif; font-weight: bold;
+    font-size: 11px; transition: transform 0.1s, filter 0.1s;
+    display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1.3;
+  }
+  .buy-btn:active { transform: scale(0.95); }
+  .buy-btn:hover  { filter: brightness(1.15); }
+  .buy-btn:disabled { opacity: 0.4; cursor: not-allowed; filter: none; transform: none; }
+  .btn-t10  { background: linear-gradient(135deg,#4CAF50,#2E7D32); color:#fff; }
+  .btn-t20  { background: linear-gradient(135deg,#2196F3,#0D47A1); color:#fff; }
+  .btn-t50  { background: linear-gradient(135deg,#FF9800,#E65100); color:#fff; }
+  .btn-t100 { background: linear-gradient(135deg,#9C27B0,#4A148C); color:#fff; }
+  #table-area {
+    position: absolute; left: 155px; right: 0; top: 0; bottom: 0;
+    overflow: hidden; z-index: 1;
+  }
+  .scratch-card {
+    position: absolute; border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.55);
+    cursor: move; overflow: hidden;
+    border: 3px solid rgba(255,255,255,0.22);
+    font-family: 'Georgia', serif;
+    display: flex; flex-direction: column;
+  }
+  .card-title {
+    text-align: center; font-weight: bold; letter-spacing: 1.2px;
+    padding: 4px 8px; text-transform: uppercase; flex-shrink: 0;
+  }
+  .card-main { display: flex; flex: 1; min-height: 0; }
+  .card-symbols {
+    display: flex; flex-direction: column; justify-content: space-evenly;
+    padding: 5px 4px 5px 5px; flex-shrink: 0;
+    border-right: 1px solid rgba(255,255,255,0.12);
+  }
+  .sym-row { display: flex; align-items: center; gap: 3px; color: rgba(255,255,255,0.6); white-space: nowrap; }
+  .card-scratch-area {
+    flex: 1; display: flex; align-items: center; justify-content: center; padding: 6px 8px;
+  }
+  .scratch-grid { display: flex; gap: 6px; justify-content: center; align-items: center; }
+  .scratch-cell {
+    border-radius: 7px; display: flex; align-items: center; justify-content: center;
+    border: 2px solid rgba(0,0,0,0.3); flex-shrink: 0;
+  }
+  .scratch-cell.covered { background: #777 !important; cursor: pointer; }
+  .scratch-cell.covered::after { content:'?'; color:#444; font-weight:bold; font-size:0.85em; }
+  .scratch-cell.revealed { cursor: default; }
+  .card-result {
+    display: none; font-weight: bold; text-align: center;
+    padding: 4px 10px; cursor: pointer; flex-shrink: 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    transition: filter 0.15s;
+  }
+  .card-result:hover { filter: brightness(1.2); }
+  .card-result.visible { display: block; }
+  .result-win     { background: #c8960a; color: #fff; }
+  .result-lose    { background: rgba(0,0,0,0.35); color: rgba(255,255,255,0.45); }
+  .result-partial { background: #8a6800; color: #ffe; }
+
+  .win-flash { animation: winFlash 0.65s ease; }
+  @keyframes winFlash { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.9) drop-shadow(0 0 10px gold)} }
+  .card-drop { animation: cardDrop 0.45s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes cardDrop { from{transform:translateY(-150px) scale(0.65);opacity:0} to{transform:translateY(0) scale(1);opacity:1} }
+
+  /* coin burst */
+  .coin { position:fixed; pointer-events:none; font-size:20px; z-index:999; animation: coinFly 1s ease-out forwards; }
+  @keyframes coinFly {
+    0%   { transform: translate(0,0) scale(1); opacity:1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(0.3); opacity:0; }
+  }
+
+  .sidebar-label { color:#aaa; font-size:10px; text-align:center; margin-top:2px; }
+</style>
+
+<div id="app">
+  <div id="felt-texture"></div>
+  <button id="mute-btn" onclick="toggleMute()" title="Muto/Audio">🔊</button>
+  <div id="sidebar">
+    <div id="budget-display">
+      <div style="font-size:10px;color:#aaa;letter-spacing:2px">SALDO</div>
+      <div class="amount" id="budget-val">€100</div>
+    </div>
+    <div class="sidebar-label">— ACQUISTA —</div>
+    <button class="buy-btn btn-t10"  onclick="buyCard(0)">
+      <span style="font-size:17px">🍒</span><span>FORTUNA ROSSA</span>
+      <span style="font-size:13px;color:#FFD700">€10</span>
+      <span style="font-size:9px;opacity:0.65">3 simboli</span>
+    </button>
+    <button class="buy-btn btn-t20"  onclick="buyCard(1)">
+      <span style="font-size:17px">💎</span><span>GEMME REALI</span>
+      <span style="font-size:13px;color:#FFD700">€20</span>
+      <span style="font-size:9px;opacity:0.65">4 simboli</span>
+    </button>
+    <button class="buy-btn btn-t50"  onclick="buyCard(2)">
+      <span style="font-size:17px">⭐</span><span>GALASSIA</span>
+      <span style="font-size:13px;color:#FFD700">€50</span>
+      <span style="font-size:9px;opacity:0.65">5 simboli</span>
+    </button>
+    <button class="buy-btn btn-t100" onclick="buyCard(3)">
+      <span style="font-size:17px">🐉</span><span>DRAGO D'ORO</span>
+      <span style="font-size:13px;color:#FFD700">€100</span>
+      <span style="font-size:9px;opacity:0.65">7 simboli</span>
+    </button>
+  </div>
+  <div id="table-area"></div>
+</div>
+
+<script>
+// ── AUDIO ──────────────────────────────────────────────
+const bgMusic   = new Audio('Music1.mp3');
+bgMusic.loop    = true;
+bgMusic.volume  = 0.4;
+
+const sfxBuy     = new Audio('Buy1.mp3');
+const sfxScratch = new Audio('Scratch.mp3');
+
+let muted = false;
+
+function startMusic() {
+  if (!muted) bgMusic.play().catch(()=>{});
+}
+
+function toggleMute() {
+  muted = !muted;
+  document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
+  if (muted) {
+    bgMusic.pause();
+  } else {
+    bgMusic.play().catch(()=>{});
+  }
+}
+
+function playSfx(audio) {
+  if (muted) return;
+  const clone = audio.cloneNode();
+  clone.volume = 0.7;
+  clone.play().catch(()=>{});
+}
+
+// Start music on first user interaction (browser autoplay policy)
+let musicStarted = false;
+document.addEventListener('click', () => {
+  if (!musicStarted) { musicStarted = true; startMusic(); }
+}, { capture: true });
+
+// ── COIN BURST ─────────────────────────────────────────
+function coinBurst(x, y, count) {
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'coin';
+    el.textContent = '🪙';
+    const angle = (Math.random() * 360) * Math.PI / 180;
+    const dist  = 60 + Math.random() * 80;
+    el.style.setProperty('--dx', Math.cos(angle)*dist + 'px');
+    el.style.setProperty('--dy', Math.sin(angle)*dist - 40 + 'px');
+    el.style.left = x + 'px';
+    el.style.top  = y + 'px';
+    el.style.animationDelay = (Math.random()*0.2) + 's';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1200);
+  }
+}
+
+// ── TYPES ──────────────────────────────────────────────
+const TYPES = [
+  {
+    name:'FORTUNA ROSSA', cost:10, emoji:'🍒',
+    bg:'linear-gradient(160deg,#1a4a1a,#2d7a2d)',
+    titleBg:'#163a16', titleColor:'#90EE90', cellBg:'#2a5a2a',
+    symbols:['🍒','🍋','💰'],
+    probs:[0.50,0.40,0.10], multipliers:[1.3,2.0,5.0],
+    cardW:210, cardH:105, titleSize:'9px', symSize:'13px', multSize:'8px', cellSize:40, cellFontSize:'19px', resultSize:'10px',
+  },
+  {
+    name:'GEMME REALI', cost:20, emoji:'💎',
+    bg:'linear-gradient(160deg,#0a1a4a,#1a3a8a)',
+    titleBg:'#081530', titleColor:'#87CEEB', cellBg:'#1a2a6a',
+    symbols:['💎','🔷','🔶','👑'],
+    probs:[0.45,0.30,0.15,0.10], multipliers:[1.3,2.0,3.5,5.0],
+    cardW:252, cardH:126, titleSize:'10px', symSize:'13px', multSize:'8px', cellSize:44, cellFontSize:'20px', resultSize:'10px',
+  },
+  {
+    name:'GALASSIA', cost:50, emoji:'⭐',
+    bg:'linear-gradient(160deg,#2a1a00,#5a3a00)',
+    titleBg:'#1a1000', titleColor:'#FFD700', cellBg:'#3a2800',
+    symbols:['⭐','🌟','☄️','🌙','🚀'],
+    probs:[0.40,0.25,0.18,0.10,0.07], multipliers:[1.3,2.0,3.0,4.0,5.0],
+    cardW:294, cardH:147, titleSize:'11px', symSize:'13px', multSize:'8px', cellSize:50, cellFontSize:'22px', resultSize:'11px',
+  },
+  {
+    name:"DRAGO D'ORO", cost:100, emoji:'🐉',
+    bg:'linear-gradient(160deg,#2a0a2a,#5a0a5a)',
+    titleBg:'#1a001a', titleColor:'#EE82EE', cellBg:'#3a1a3a',
+    symbols:['🐉','🔥','⚡','🗡️','🏆','💫','🌺'],
+    probs:[0.35,0.22,0.17,0.12,0.07,0.04,0.03], multipliers:[1.3,2.0,2.8,3.5,4.0,5.0,7.0],
+    cardW:336, cardH:168, titleSize:'11px', symSize:'13px', multSize:'8px', cellSize:56, cellFontSize:'25px', resultSize:'11px',
+  },
+];
+
+let budget = 100;
+let cardZ  = 100;
+let dragState = null;
+
+function updateBudget() {
+  document.getElementById('budget-val').textContent = '€' + budget.toFixed(0);
+  document.querySelectorAll('.buy-btn').forEach((btn,i) => { btn.disabled = budget < TYPES[i].cost; });
+}
+
+function rollSymbol(type) {
+  const r = Math.random(); let acc = 0;
+  for (let i = 0; i < type.probs.length; i++) { acc += type.probs[i]; if (r < acc) return i; }
+  return type.probs.length - 1;
+}
+
+function calcWin(type, revealed) {
+  const counts = {};
+  revealed.forEach(i => { counts[i] = (counts[i]||0)+1; });
+  let bestMult = 0, bestCount = 0, bestSym = -1;
+  for (const [si, cnt] of Object.entries(counts)) {
+    if (cnt < 2) continue;
+    const idx = parseInt(si);
+    const mult = cnt >= 3 ? type.multipliers[idx] : type.multipliers[idx] * 0.6;
+    if (mult > bestMult) { bestMult = mult; bestCount = cnt; bestSym = idx; }
+  }
+  return { mult: bestMult, count: bestCount, symIdx: bestSym };
+}
+
+function buyCard(typeIdx) {
+  const type = TYPES[typeIdx];
+  if (budget < type.cost) return;
+  budget -= type.cost;
+  updateBudget();
+  playSfx(sfxBuy);
+
+  const CELLS = 3;
+  const rolls = Array.from({length: CELLS}, () => rollSymbol(type));
+  const area  = document.getElementById('table-area');
+  const aW = area.clientWidth, aH = area.clientHeight;
+  const x = 12 + Math.floor(Math.random() * Math.max(10, aW - type.cardW - 20));
+  const y = 10 + Math.floor(Math.random() * Math.max(10, aH - type.cardH - 20));
+
+  const card = document.createElement('div');
+  card.className = 'scratch-card card-drop';
+  card.style.cssText = `left:${x}px;top:${y}px;width:${type.cardW}px;height:${type.cardH}px;background:${type.bg};z-index:${++cardZ}`;
+
+  const title = document.createElement('div');
+  title.className = 'card-title';
+  title.style.cssText = `background:${type.titleBg};color:${type.titleColor};font-size:${type.titleSize}`;
+  title.innerHTML = `${type.emoji} ${type.name} &nbsp;·&nbsp; €${type.cost}`;
+  card.appendChild(title);
+
+  const main = document.createElement('div');
+  main.className = 'card-main';
+
+  const symCol = document.createElement('div');
+  symCol.className = 'card-symbols';
+  type.symbols.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'sym-row';
+    row.innerHTML = `<span style="font-size:${type.symSize};line-height:1">${s}</span><span style="font-size:${type.multSize}">${type.multipliers[i]}x</span>`;
+    symCol.appendChild(row);
+  });
+  main.appendChild(symCol);
+
+  const scratchArea = document.createElement('div');
+  scratchArea.className = 'card-scratch-area';
+  const grid = document.createElement('div');
+  grid.className = 'scratch-grid';
+
+  const covered  = [true,true,true];
+  const revealed = [];
+  const resultEl = document.createElement('div');
+  resultEl.className = 'card-result';
+  resultEl.style.fontSize = type.resultSize;
+
+  for (let i = 0; i < CELLS; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'scratch-cell covered';
+    cell.style.cssText = `width:${type.cellSize}px;height:${type.cellSize}px;background:${type.cellBg};font-size:${type.cellFontSize}`;
+
+    cell.onclick = (e) => {
+      if (!covered[i]) return;
+      covered[i] = false;
+      revealed.push(rolls[i]);
+      cell.classList.remove('covered');
+      cell.classList.add('revealed');
+      cell.textContent = type.symbols[rolls[i]];
+      cell.style.background = type.cellBg;
+      playSfx(sfxScratch);
+
+      if (covered.every(v => !v)) {
+        const win = calcWin(type, revealed);
+        resultEl.classList.add('visible');
+        if (win.mult > 0) {
+          const prize = Math.round(type.cost * win.mult);
+          budget += prize;
+          updateBudget();
+          resultEl.className = 'card-result visible ' + (win.mult >= 2 ? 'result-win' : 'result-partial');
+          resultEl.textContent = `Hai vinto €${prize}!`;
+          card.classList.add('win-flash');
+          // coin burst from card center
+          const cr = card.getBoundingClientRect();
+          coinBurst(cr.left + cr.width/2, cr.top + cr.height/2, win.mult >= 3 ? 12 : 6);
+        } else {
+          resultEl.className = 'card-result visible result-lose';
+          resultEl.textContent = 'Hai perso.';
+        }
+        resultEl.onclick = () => card.remove();
+      }
+    };
+    grid.appendChild(cell);
+  }
+
+  scratchArea.appendChild(grid);
+  main.appendChild(scratchArea);
+  card.appendChild(main);
+  card.appendChild(resultEl);
+  area.appendChild(card);
+  makeDraggable(card);
+}
+
+function makeDraggable(card) {
+  card.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('scratch-cell') || e.target.classList.contains('card-result')) return;
+    card.style.zIndex = ++cardZ;
+    const rect     = card.getBoundingClientRect();
+    const areaRect = card.parentElement.getBoundingClientRect();
+    dragState = { card, startX: e.clientX-(rect.left-areaRect.left), startY: e.clientY-(rect.top-areaRect.top) };
+    e.preventDefault();
+  });
+}
+document.addEventListener('mousemove', e => {
+  if (!dragState) return;
+  const area = document.getElementById('table-area');
+  let nx = e.clientX-dragState.startX, ny = e.clientY-dragState.startY;
+  const card = dragState.card;
+  nx = Math.max(0, Math.min(nx, area.clientWidth-card.offsetWidth));
+  ny = Math.max(0, Math.min(ny, area.clientHeight-card.offsetHeight));
+  card.style.left = nx+'px'; card.style.top = ny+'px';
+});
+document.addEventListener('mouseup', () => { dragState = null; });
+
+updateBudget();
+</script>

@@ -69,6 +69,40 @@
             50% { opacity: 0.50; }
         }
 
+        #jackpot-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 10000;
+            pointer-events: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #jackpot-overlay.visible {
+            display: flex;
+        }
+
+        #jackpot-overlay span {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 28vw;
+            color: #FFD700;
+            text-shadow:
+                0 0 40px #FFD700,
+                0 0 80px #FF8C00,
+                0 0 10px #fff;
+            animation: jackpotPulse 0.5s ease-in-out infinite;
+            line-height: 1;
+            text-align: center;
+            letter-spacing: 4px;
+        }
+
+        @keyframes jackpotPulse {
+            0%, 100% { transform: scale(1);    opacity: 1; }
+            50%       { transform: scale(1.06); opacity: 0.85; }
+        }
+
         .coriandolo {
             position: fixed;
             opacity: 1;
@@ -816,10 +850,19 @@
                 const totale = 2500;
                 const durataTotale = 35000;
 
-                // Mostra il flash dorato
+                // Mostra il flash dorato e la scritta JACKPOT
                 const flash = document.getElementById('golden-flash');
+                const overlay = document.getElementById('jackpot-overlay');
                 flash.style.display = 'block';
-                setTimeout(() => { flash.style.display = 'none'; }, durataTotale);
+                overlay.classList.add('visible');
+                isSpinning = true;
+                updateUI();
+                setTimeout(() => {
+                    flash.style.display = 'none';
+                    overlay.classList.remove('visible');
+                    isSpinning = false;
+                    updateUI();
+                }, durataTotale);
 
                 for (let i = 0; i < totale; i++) {
                     const ritardoLancio = Math.random() * durataTotale;
@@ -967,22 +1010,20 @@
                 const result = checkWin([symbol1, symbol2, symbol3]);
                 
                 if (result.win) {
-                    // Aggiungi la vincita ai crediti
                     credits += result.amount;
-                    
-                    // Mostra il messaggio di vincita
                     messageDisplay.textContent = `${result.type}! +${result.amount} crediti`;
-                    
-                    // Animazione per il jackpot
                     if (result.type.includes('Jackpot')) {
                         playJackpotAnimation();
+                        // isSpinning resta true: lo sblocca lanciaCoriandoli dopo 35s
+                    } else {
+                        isSpinning = false;
+                        updateUI();
                     }
                 } else {
                     messageDisplay.textContent = 'Nessuna vincita. Riprova!';
+                    isSpinning = false;
+                    updateUI();
                 }
-                
-                isSpinning = false;
-                updateUI();
             }
             
             // Event listeners
@@ -1006,6 +1047,7 @@
             updateUI();
         });
     </script>
+    <div id="jackpot-overlay"><span>JACKPOT</span></div>
     <div id="golden-flash"></div>
     <audio id="jackpot-sound" src="OdeToJoyBB.mp3"></audio>
     <audio id="button-sound" src="Button.mp3"></audio>

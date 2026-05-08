@@ -209,7 +209,7 @@ const TYPES = [
     titleBg:'#163a16', titleColor:'#90EE90', cellBg:'#2a5a2a',
     symbols:['🍒','🍋','💰'],
     probs:[0.50,0.40,0.10],
-    multipliers:[1.5, 2.5, 6.0],
+    multipliers:[2.0, 3.0, 8.0],
     cardW:210, cardH:105, titleSize:'9px', symSize:'13px', multSize:'8px', cellSize:40, cellFontSize:'19px', resultSize:'10px',
   },
   {
@@ -218,7 +218,7 @@ const TYPES = [
     titleBg:'#081530', titleColor:'#87CEEB', cellBg:'#1a2a6a',
     symbols:['💎','🔷','🔶','👑'],
     probs:[0.45,0.30,0.15,0.10],
-    multipliers:[1.5, 2.5, 4.0, 7.0],
+    multipliers:[2.0, 3.0, 5.0, 8.0],
     cardW:252, cardH:126, titleSize:'10px', symSize:'13px', multSize:'8px', cellSize:44, cellFontSize:'20px', resultSize:'10px',
   },
   {
@@ -227,7 +227,7 @@ const TYPES = [
     titleBg:'#1a1000', titleColor:'#FFD700', cellBg:'#3a2800',
     symbols:['⭐','🌟','☄️','🌙','🚀'],
     probs:[0.40,0.25,0.18,0.10,0.07],
-    multipliers:[1.5, 2.5, 4.0, 6.0, 9.0],
+    multipliers:[2.0, 3.0, 5.0, 7.0, 10.0],
     cardW:294, cardH:147, titleSize:'11px', symSize:'13px', multSize:'8px', cellSize:50, cellFontSize:'22px', resultSize:'11px',
   },
   {
@@ -236,7 +236,7 @@ const TYPES = [
     titleBg:'#1a001a', titleColor:'#EE82EE', cellBg:'#3a1a3a',
     symbols:['🐉','🔥','⚡','🗡️','🏆','💫','🌺'],
     probs:[0.35,0.22,0.17,0.12,0.07,0.04,0.03],
-    multipliers:[1.5, 2.5, 4.0, 6.0, 9.0, 13.0, 18.0],
+    multipliers:[2.0, 3.0, 5.0, 7.0, 10.0, 15.0, 20.0],
     cardW:336, cardH:168, titleSize:'11px', symSize:'13px', multSize:'8px', cellSize:56, cellFontSize:'25px', resultSize:'11px',
   },
 ];
@@ -267,7 +267,7 @@ function calcWin(type, revealed) {
   for (const [si, cnt] of Object.entries(counts)) {
     if (cnt < 2) continue;
     const idx = parseInt(si);
-    const mult = cnt >= 3 ? type.multipliers[idx] : type.multipliers[idx] * 0.8;
+    const mult = cnt >= 3 ? type.multipliers[idx] : type.multipliers[idx] * 1.3;
     if (mult > bestMult) { bestMult = mult; bestCount = cnt; bestSym = idx; }
   }
   return { mult: bestMult, count: bestCount, symIdx: bestSym };
@@ -369,6 +369,7 @@ function buyCard(typeIdx) {
 }
 
 function makeDraggable(card) {
+  // Mouse
   card.addEventListener('mousedown', e => {
     if (e.target.classList.contains('scratch-cell') || e.target.classList.contains('card-result')) return;
     card.style.zIndex = ++cardZ;
@@ -377,17 +378,38 @@ function makeDraggable(card) {
     dragState = { card, startX: e.clientX-(rect.left-areaRect.left), startY: e.clientY-(rect.top-areaRect.top) };
     e.preventDefault();
   });
+  // Touch
+  card.addEventListener('touchstart', e => {
+    if (e.target.classList.contains('scratch-cell') || e.target.classList.contains('card-result')) return;
+    card.style.zIndex = ++cardZ;
+    const touch    = e.touches[0];
+    const rect     = card.getBoundingClientRect();
+    const areaRect = card.parentElement.getBoundingClientRect();
+    dragState = { card, startX: touch.clientX-(rect.left-areaRect.left), startY: touch.clientY-(rect.top-areaRect.top) };
+    e.preventDefault();
+  }, { passive: false });
 }
-document.addEventListener('mousemove', e => {
+
+function applyDrag(clientX, clientY) {
   if (!dragState) return;
   const area = document.getElementById('table-area');
-  let nx = e.clientX-dragState.startX, ny = e.clientY-dragState.startY;
   const card = dragState.card;
-  nx = Math.max(0, Math.min(nx, area.clientWidth-card.offsetWidth));
-  ny = Math.max(0, Math.min(ny, area.clientHeight-card.offsetHeight));
+  let nx = clientX - dragState.startX;
+  let ny = clientY - dragState.startY;
+  nx = Math.max(0, Math.min(nx, area.clientWidth  - card.offsetWidth));
+  ny = Math.max(0, Math.min(ny, area.clientHeight - card.offsetHeight));
   card.style.left = nx+'px'; card.style.top = ny+'px';
-});
-document.addEventListener('mouseup', () => { dragState = null; });
+}
+
+document.addEventListener('mousemove', e => applyDrag(e.clientX, e.clientY));
+document.addEventListener('mouseup',   () => { dragState = null; });
+
+document.addEventListener('touchmove', e => {
+  if (!dragState) return;
+  applyDrag(e.touches[0].clientX, e.touches[0].clientY);
+  e.preventDefault();
+}, { passive: false });
+document.addEventListener('touchend', () => { dragState = null; });
 
 updateBudget();
 </script>

@@ -208,8 +208,7 @@ const TYPES = [
     bg:'linear-gradient(160deg,#1a4a1a,#2d7a2d)',
     titleBg:'#163a16', titleColor:'#90EE90', cellBg:'#2a5a2a',
     symbols:['🍒','🍋','💰'],
-    probs:[0.50,0.40,0.10],
-    multipliers:[2.0, 3.0, 8.0],
+    multipliers:[1.5, 2.5, 6.0],
     cardW:210, cardH:105, titleSize:'9px', symSize:'13px', multSize:'8px', cellSize:40, cellFontSize:'19px', resultSize:'10px',
   },
   {
@@ -217,8 +216,7 @@ const TYPES = [
     bg:'linear-gradient(160deg,#0a1a4a,#1a3a8a)',
     titleBg:'#081530', titleColor:'#87CEEB', cellBg:'#1a2a6a',
     symbols:['💎','🔷','🔶','👑'],
-    probs:[0.45,0.30,0.15,0.10],
-    multipliers:[2.0, 3.0, 5.0, 8.0],
+    multipliers:[1.5, 2.5, 4.0, 7.0],
     cardW:252, cardH:126, titleSize:'10px', symSize:'13px', multSize:'8px', cellSize:44, cellFontSize:'20px', resultSize:'10px',
   },
   {
@@ -226,8 +224,7 @@ const TYPES = [
     bg:'linear-gradient(160deg,#2a1a00,#5a3a00)',
     titleBg:'#1a1000', titleColor:'#FFD700', cellBg:'#3a2800',
     symbols:['⭐','🌟','☄️','🌙','🚀'],
-    probs:[0.40,0.25,0.18,0.10,0.07],
-    multipliers:[2.0, 3.0, 5.0, 7.0, 10.0],
+    multipliers:[1.5, 2.5, 4.0, 6.0, 9.0],
     cardW:294, cardH:147, titleSize:'11px', symSize:'13px', multSize:'8px', cellSize:50, cellFontSize:'22px', resultSize:'11px',
   },
   {
@@ -235,8 +232,7 @@ const TYPES = [
     bg:'linear-gradient(160deg,#2a0a2a,#5a0a5a)',
     titleBg:'#1a001a', titleColor:'#EE82EE', cellBg:'#3a1a3a',
     symbols:['🐉','🔥','⚡','🗡️','🏆','💫','🌺'],
-    probs:[0.35,0.22,0.17,0.12,0.07,0.04,0.03],
-    multipliers:[2.0, 3.0, 5.0, 7.0, 10.0, 15.0, 20.0],
+    multipliers:[1.5, 2.5, 4.0, 6.0, 9.0, 13.0, 18.0],
     cardW:336, cardH:168, titleSize:'11px', symSize:'13px', multSize:'8px', cellSize:56, cellFontSize:'25px', resultSize:'11px',
   },
 ];
@@ -255,9 +251,7 @@ function updateBudget() {
 }
 
 function rollSymbol(type) {
-  const r = Math.random(); let acc = 0;
-  for (let i = 0; i < type.probs.length; i++) { acc += type.probs[i]; if (r < acc) return i; }
-  return type.probs.length - 1;
+  return Math.floor(Math.random() * type.symbols.length);
 }
 
 function calcWin(type, revealed) {

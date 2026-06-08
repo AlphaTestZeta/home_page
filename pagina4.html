@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Frontiera Nord — Posto di Controllo</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Oswald:wght@300;400;500;600&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --paper:#f0e8d0;--paper-aged:#e8dcc0;--paper-dark:#d4c89a;
+  --ink:#1a1208;--ink-faded:#3d3020;
+  --amber:#d4890a;--amber-dk:#8b5a0a;
+  --green-led:#22c55e;--red-led:#ef4444;
+  --font-mono:'Share Tech Mono',monospace;
+  --font-title:'Oswald',sans-serif;
+  --font-type:'Special Elite',cursive;
+}
+html,body{width:100%;height:100%;overflow:hidden;background:#0e0b06;font-family:var(--font-mono);-webkit-tap-highlight-color:transparent;}
+#desk{width:100vw;height:100vh;position:relative;overflow:hidden;
+  background:repeating-linear-gradient(91deg,transparent 0,rgba(255,255,255,.012) 1px,transparent 2px,transparent 44px),
+    repeating-linear-gradient(180deg,transparent 0,rgba(0,0,0,.07) 1px,transparent 2px,transparent 90px),
+    linear-gradient(170deg,#2e2010 0%,#1a1008 35%,#261a0c 65%,#181008 100%);}
+#desk::before{content:'';position:absolute;top:-180px;left:50%;transform:translateX(-50%);width:1000px;height:620px;background:radial-gradient(ellipse at 50% 18%,rgba(220,165,55,.13) 0%,transparent 68%);pointer-events:none;z-index:0;}
+#topbar{position:absolute;top:0;left:0;right:0;height:52px;background:linear-gradient(180deg,#2d3748 0%,#1a202c 100%);border-bottom:3px solid #0a0e17;box-shadow:0 4px 24px rgba(0,0,0,.65);display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:500;gap:8px;}
+.station-name{font-family:var(--font-title);font-size:15px;font-weight:600;letter-spacing:.14em;color:#a0aec0;text-transform:uppercase;white-space:nowrap;}
+.station-name span{color:var(--amber);}
+.console-group{display:flex;align-items:center;gap:14px;flex-shrink:0;}
+.console-block{display:flex;flex-direction:column;align-items:center;gap:1px;}
+.cb-label{font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:#4a5568;}
+.cb-val{font-size:15px;color:#e2e8f0;font-family:var(--font-mono);}
+#date-display{background:#060a06;border:1px solid #1d3d1d;border-radius:3px;padding:3px 10px;font-family:var(--font-mono);font-size:12px;color:var(--green-led);letter-spacing:.07em;}
+.err-leds{display:flex;gap:5px;align-items:center;}
+.led{width:13px;height:13px;border-radius:50%;background:#160808;border:1px solid #2d1a1a;transition:background .3s,box-shadow .3s;}
+.led.on{background:var(--red-led);box-shadow:0 0 8px rgba(239,68,68,.75);}
+#level-badge{background:var(--amber-dk);border:1px solid var(--amber);border-radius:3px;padding:3px 9px;font-family:var(--font-title);font-size:13px;font-weight:500;color:var(--amber);letter-spacing:.1em;}
+#mode-badge{padding:3px 9px;border-radius:3px;font-family:var(--font-title);font-size:11px;font-weight:500;letter-spacing:.1em;border:1px solid #276749;background:#1a2a1a;color:#6ee7b7;}
+#return-zone{position:absolute;top:52px;left:0;right:0;height:72px;background:linear-gradient(180deg,rgba(20,26,40,.96) 0%,rgba(20,26,40,.55) 100%);border-bottom:2px dashed rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;gap:10px;z-index:10;transition:background .2s,border-color .2s;}
+#return-zone.drag-over{background:linear-gradient(180deg,rgba(34,197,94,.18) 0%,rgba(34,197,94,.04) 100%);border-bottom-color:rgba(34,197,94,.45);}
+#return-zone.complete{background:linear-gradient(180deg,rgba(34,197,94,.22) 0%,rgba(34,197,94,.05) 100%);}
+.rz-label{font-family:var(--font-title);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.18);pointer-events:none;}
+#return-zone.drag-over .rz-label,#return-zone.complete .rz-label{color:rgba(34,197,94,.75);}
+.rz-arrow{font-size:18px;color:rgba(255,255,255,.13);animation:bob 2s ease-in-out infinite;}
+#return-zone.drag-over .rz-arrow,#return-zone.complete .rz-arrow{color:rgba(34,197,94,.65);}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+#return-progress{font-size:10px;color:rgba(255,255,255,.28);letter-spacing:.1em;margin-left:10px;}
+#return-zone.complete #return-progress{color:rgba(34,197,94,.85);}
+#play-area{position:absolute;top:124px;left:0;right:240px;bottom:0;z-index:1;overflow:hidden;}
+.doc-window{position:absolute;background:var(--paper);border:1px solid #b8a880;border-radius:2px;box-shadow:4px 6px 20px rgba(0,0,0,.5),1px 1px 0 rgba(255,255,255,.28) inset;min-width:230px;cursor:grab;z-index:100;user-select:none;will-change:transform;touch-action:none;}
+.doc-window.dragging{cursor:grabbing;box-shadow:10px 16px 48px rgba(0,0,0,.72);z-index:9000;}
+.doc-window.returned{opacity:0;transform:translateY(-28px) scale(.88)!important;transition:opacity .3s,transform .3s;pointer-events:none;}
+.doc-titlebar{height:25px;background:linear-gradient(180deg,#3d4a5c 0%,#2d3748 100%);border-bottom:1px solid #1a202c;border-radius:2px 2px 0 0;display:flex;align-items:center;padding:0 9px;gap:5px;}
+.doc-title-text{font-family:var(--font-title);font-size:10px;font-weight:400;letter-spacing:.12em;color:#a0aec0;text-transform:uppercase;flex:1;}
+.doc-flag{font-size:12px;}
+.doc-body{padding:12px;font-family:var(--font-type);font-size:13px;color:var(--ink);line-height:1.6;}
+.pp-header{text-align:center;border-bottom:1px solid var(--paper-dark);padding-bottom:8px;margin-bottom:10px;}
+.pp-nation{font-family:var(--font-title);font-size:14px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);}
+.pp-subtitle{font-size:9px;letter-spacing:.14em;color:var(--ink-faded);text-transform:uppercase;}
+.pp-photo{float:right;margin-left:10px;margin-bottom:6px;width:50px;height:62px;background:linear-gradient(135deg,#c8d8e8,#a0b8c8);border:1px solid var(--paper-dark);box-shadow:inset 1px 1px 3px rgba(0,0,0,.15);}
+.pp-field{margin-bottom:6px;}
+.pp-field-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faded);margin-bottom:1px;}
+.pp-field-val{font-family:var(--font-type);font-size:13px;color:var(--ink);}
+.pp-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;}
+.pp-mrz{margin-top:10px;padding:7px 8px;background:var(--paper-aged);border:1px solid var(--paper-dark);font-family:var(--font-mono);font-size:9px;letter-spacing:.05em;color:var(--ink-faded);word-break:break-all;line-height:1.7;}
+.visa-doc{background:var(--paper-aged)!important;border-color:#a09060!important;}
+.visa-stamp-area{border:1.5px solid #8b7040;border-radius:2px;padding:10px;margin-bottom:8px;position:relative;}
+.visa-stamp-area::before{content:'VISTO SCHENGEN';position:absolute;top:-8px;left:10px;background:var(--paper-aged);padding:0 5px;font-family:var(--font-title);font-size:8px;letter-spacing:.14em;color:var(--ink-faded);}
+.contract-doc{background:#f4f0e8!important;}
+.contract-header{text-align:center;border-bottom:2px solid var(--ink-faded);padding-bottom:7px;margin-bottom:9px;}
+/* MANUAL BUTTON */
+#manual-btn{position:absolute;bottom:14px;left:14px;z-index:200;background:linear-gradient(180deg,#2a1f10 0%,#1a1208 100%);border:1px solid #5a4020;border-radius:2px;padding:8px 14px;cursor:pointer;font-family:var(--font-title);font-size:12px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:#8a6a30;box-shadow:2px 3px 10px rgba(0,0,0,.5);transition:border-color .15s,color .15s,transform .1s;user-select:none;touch-action:manipulation;}
+#manual-btn:hover{border-color:var(--amber);color:var(--amber);}
+#manual-btn:active{transform:scale(.96);}
+/* MANUAL WINDOW */
+.manual-window{position:absolute;background:#ede0c4;border:1px solid #8a6a30;border-radius:2px;box-shadow:5px 7px 24px rgba(0,0,0,.55);width:300px;cursor:grab;z-index:150;user-select:none;will-change:transform;touch-action:none;}
+.manual-window.dragging{cursor:grabbing;z-index:9001;}
+.manual-titlebar{height:28px;background:linear-gradient(180deg,#4a3010 0%,#2a1c08 100%);border-bottom:1px solid #1a0e04;border-radius:2px 2px 0 0;display:flex;align-items:center;padding:0 10px;gap:6px;}
+.manual-titlebar .mt-title{font-family:var(--font-title);font-size:10px;font-weight:500;letter-spacing:.14em;color:#a08040;text-transform:uppercase;flex:1;}
+.manual-close{font-size:14px;color:#5a4020;cursor:pointer;padding:2px 5px;transition:color .15s;line-height:1;}
+.manual-close:hover{color:var(--amber);}
+.manual-page{padding:14px;}
+.manual-page-title{font-family:var(--font-title);font-size:13px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink);border-bottom:2px solid var(--paper-dark);padding-bottom:6px;margin-bottom:10px;}
+.manual-page-sub{font-size:9px;font-family:var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faded);margin-bottom:8px;}
+.manual-entry{font-family:var(--font-type);font-size:11.5px;color:var(--ink);margin-bottom:5px;line-height:1.5;display:flex;gap:6px;align-items:flex-start;}
+.manual-entry .me-flag{flex-shrink:0;font-size:13px;}
+.manual-entry .me-name{font-weight:700;}
+.manual-section-head{font-family:var(--font-title);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faded);margin:10px 0 5px;border-top:1px solid var(--paper-dark);padding-top:7px;}
+.manual-body-scroll{max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--paper-dark) transparent;}
+.manual-body-scroll::-webkit-scrollbar{width:3px;}.manual-body-scroll::-webkit-scrollbar-thumb{background:var(--paper-dark);}
+.manual-nav{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;border-top:1px solid var(--paper-dark);background:rgba(0,0,0,.04);}
+.mnav-btn{font-family:var(--font-title);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faded);cursor:pointer;padding:3px 8px;border:1px solid var(--paper-dark);border-radius:2px;background:transparent;transition:border-color .15s,color .15s;}
+.mnav-btn:hover{border-color:var(--ink-faded);color:var(--ink);}
+.mnav-btn:disabled{opacity:.3;cursor:default;}
+.manual-page-num{font-family:var(--font-mono);font-size:10px;color:var(--ink-faded);letter-spacing:.08em;}
+/* RULEBOOK */
+#rulebook{position:absolute;right:0;top:124px;bottom:0;width:240px;background:linear-gradient(180deg,#1a202c 0%,#161922 100%);border-left:2px solid #080c14;box-shadow:-4px 0 20px rgba(0,0,0,.4);display:flex;flex-direction:column;z-index:50;overflow:hidden;}
+.rb-header{background:linear-gradient(180deg,#2d3748 0%,#1e2535 100%);border-bottom:1px solid #080c14;padding:10px 12px 8px;}
+.rb-title{font-family:var(--font-title);font-size:12px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:#4a5568;margin-bottom:2px;}
+.rb-edition{font-size:9px;color:#2d3748;letter-spacing:.07em;}
+.rb-rules{flex:1;overflow-y:auto;padding:10px;scrollbar-width:thin;scrollbar-color:#2d3748 transparent;}
+.rb-rules::-webkit-scrollbar{width:3px;}.rb-rules::-webkit-scrollbar-thumb{background:#2d3748;}
+.rule-entry{padding:7px 9px;border-left:2px solid #1a2030;margin-bottom:7px;font-size:10px;line-height:1.5;color:#374151;font-family:var(--font-mono);}
+.rule-entry.active{border-left-color:#718096;color:#6b7280;}
+.rule-entry.new-rule{border-left-color:var(--amber);color:var(--amber);animation:pulseRule 1.8s ease 4;}
+@keyframes pulseRule{0%,100%{background:transparent}50%{background:rgba(212,137,10,.09)}}
+.rb-divider{border:none;border-top:1px solid #080c14;margin:5px 0;}
+.rb-decision{padding:10px;border-top:2px solid #080c14;background:#0c0f15;display:flex;flex-direction:column;gap:7px;}
+.btn-approve,.btn-deny{padding:11px;border:none;border-radius:2px;font-family:var(--font-title);font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:filter .12s,transform .1s;touch-action:manipulation;}
+.btn-approve{background:linear-gradient(180deg,#276749 0%,#1a4a33 100%);color:#6ee7b7;border:1px solid #1a4a33;box-shadow:0 2px 0 #0f2d1f;}
+.btn-approve:hover{filter:brightness(1.18);}.btn-approve:active{transform:translateY(2px);box-shadow:none;}
+.btn-deny{background:linear-gradient(180deg,#7f1d1d 0%,#5a1111 100%);color:#fca5a5;border:1px solid #5a1111;box-shadow:0 2px 0 #3a0a0a;}
+.btn-deny:hover{filter:brightness(1.18);}.btn-deny:active{transform:translateY(2px);box-shadow:none;}
+.btn-approve:disabled,.btn-deny:disabled{opacity:.28;cursor:not-allowed;filter:none;}
+/* STAMP */
+#stamp-overlay{position:absolute;inset:0;z-index:800;pointer-events:none;display:flex;align-items:center;justify-content:center;opacity:0;}
+#stamp-overlay.show{animation:stampAnim .85s ease forwards;}
+@keyframes stampAnim{0%{opacity:0;transform:scale(2.2) rotate(-18deg);}25%{opacity:1;transform:scale(.93) rotate(-7deg);}45%{opacity:1;transform:scale(1.06) rotate(-7deg);}65%{opacity:1;transform:scale(1) rotate(-7deg);}88%{opacity:.85;}100%{opacity:0;}}
+.stamp-text{font-family:var(--font-title);font-size:50px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:10px 22px;border-radius:4px;border-width:5px;border-style:solid;filter:blur(.3px);}
+.stamp-text.approved{color:rgba(26,92,42,.88);border-color:rgba(26,92,42,.88);}
+.stamp-text.denied{color:rgba(139,26,26,.88);border-color:rgba(139,26,26,.88);}
+/* NOTIF */
+#notif{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:#1a202c;border:1px solid #2d3748;border-radius:2px;padding:7px 18px;font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;color:#4a5568;z-index:600;opacity:0;transition:opacity .2s;white-space:nowrap;pointer-events:none;}
+#notif.show{opacity:1;}#notif.ok{color:#6ee7b7;border-color:#276749;}#notif.bad{color:#fca5a5;border-color:#7f1d1d;}#notif.info{color:var(--amber);border-color:var(--amber-dk);}
+/* LEVEL UP */
+#levelup-banner{position:absolute;top:124px;left:0;right:240px;background:linear-gradient(90deg,transparent 0%,rgba(212,137,10,.15) 20%,rgba(212,137,10,.15) 80%,transparent 100%);border-bottom:1px solid rgba(212,137,10,.3);padding:7px;text-align:center;font-family:var(--font-title);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);z-index:400;opacity:0;pointer-events:none;transition:opacity .3s;}
+#levelup-banner.show{opacity:1;}
+/* MAIN MENU */
+#main-menu{position:absolute;inset:0;z-index:2000;background:linear-gradient(160deg,#0e0b06 0%,#1a1208 40%,#0e0b06 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;}
+.menu-top-stripe{position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#8b1a1a,#d4890a,#1a5c2a,#1a3a6b,#8b1a1a);}
+.menu-flag-row{display:flex;gap:8px;margin-bottom:26px;font-size:22px;opacity:.55;}
+.menu-title{font-family:var(--font-title);font-size:clamp(28px,6vw,52px);font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:#c8b898;margin-bottom:4px;text-align:center;}
+.menu-sub{font-family:var(--font-mono);font-size:12px;letter-spacing:.15em;color:#4a5568;margin-bottom:36px;text-align:center;}
+.menu-date-badge{background:#060a06;border:1px solid #1d3d1d;border-radius:3px;padding:5px 16px;font-family:var(--font-mono);font-size:13px;color:var(--green-led);letter-spacing:.1em;margin-bottom:36px;}
+.menu-modes{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;}
+.mode-card{width:220px;padding:24px 20px;cursor:pointer;background:linear-gradient(160deg,#1e2535 0%,#141923 100%);border:1px solid #2d3748;border-radius:4px;text-align:center;transition:border-color .2s,transform .15s,box-shadow .2s;display:flex;flex-direction:column;gap:10px;}
+.mode-card:hover{border-color:#718096;transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.5);}
+.mode-card.classic:hover{border-color:#276749;}.mode-card.sandbox-m:hover{border-color:#3b5bdb;}
+.mode-card .mode-icon{font-size:36px;}
+.mode-card .mode-name{font-family:var(--font-title);font-size:18px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;}
+.mode-card.classic .mode-name{color:#6ee7b7;}.mode-card.sandbox-m .mode-name{color:#90b0ff;}
+.mode-card .mode-desc{font-size:11px;color:#4a5568;font-family:var(--font-mono);line-height:1.5;}
+.mode-card .mode-detail{font-size:10px;letter-spacing:.08em;border-radius:2px;padding:4px 8px;font-family:var(--font-mono);}
+.mode-card.classic .mode-detail{background:#0f2d1f;color:#276749;}.mode-card.sandbox-m .mode-detail{background:#0f1a3f;color:#3b5bdb;}
+.menu-footer{position:absolute;bottom:20px;font-size:10px;color:#2d3748;letter-spacing:.1em;font-family:var(--font-mono);}
+/* GAME OVER / FINALE */
+#gameover{display:none;position:absolute;inset:0;background:rgba(8,6,2,.93);z-index:1000;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+#gameover.show{display:flex;}
+.go-label{font-family:var(--font-title);font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#4a5568;}
+.go-title{font-family:var(--font-title);font-size:30px;font-weight:600;letter-spacing:.15em;color:#e2e8f0;}
+.go-score{font-family:var(--font-mono);font-size:70px;color:var(--amber);line-height:1;}
+.go-sub{font-size:12px;color:#4a5568;font-family:var(--font-mono);}
+.go-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 20px;margin:6px 0;}
+.go-stat-val{font-family:var(--font-mono);font-size:28px;color:#e2e8f0;line-height:1;text-align:center;}
+.go-stat-lbl{font-size:10px;color:#4a5568;font-family:var(--font-mono);letter-spacing:.08em;margin-top:3px;text-align:center;}
+.go-btns{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;justify-content:center;}
+.go-btn{padding:10px 24px;background:transparent;border:1px solid #4a5568;color:#a0aec0;font-family:var(--font-title);font-size:13px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:border-color .2s,color .2s;border-radius:2px;}
+.go-btn:hover{border-color:var(--amber);color:var(--amber);}
+.go-btn.menu-btn:hover{border-color:#718096;color:#a0aec0;}
+#gameover.finale .go-title{color:var(--amber);}
+#gameover.finale .go-score{color:#c8b898;font-size:44px;}
+/* MOBILE */
+#touch-controls{display:none;position:fixed;bottom:0;left:0;right:0;height:60px;z-index:700;}
+.touch-btn{width:50%;float:left;height:100%;border:none;font-family:var(--font-title);font-size:15px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;touch-action:manipulation;transition:filter .1s;}
+.touch-btn.t-approve{background:#1a4a33;color:#6ee7b7;border-right:1px solid #0f2d1f;}
+.touch-btn.t-deny{background:#5a1111;color:#fca5a5;}
+.touch-btn:active{filter:brightness(1.3);}
+@media(max-width:599px){
+  #touch-controls{display:block;}
+  #play-area{right:0;bottom:60px;}
+  #rulebook{width:100%;position:fixed;top:auto;bottom:60px;right:0;left:0;height:180px;flex-direction:row;border-left:none;border-top:2px solid #080c14;}
+  .rb-rules{max-height:120px;}.rb-decision{display:none;}
+  #levelup-banner{right:0;}#return-zone{height:58px;}#play-area{top:110px;}
+  .station-name{font-size:11px;}#manual-btn{bottom:68px;}
+}
+#rulebook.sandbox-mode{border-left-color:#3b5bdb;}
+</style>
+</head>
+<body>
+<div id="desk">
+  <div id="main-menu">
+    <div class="menu-top-stripe"></div>
+    <div class="menu-flag-row">&#127465;&#127466; &#127467;&#127479; &#127462;&#127481; &#127464;&#127469; &#127482;&#127480; &#127468;&#127463; &#127479;&#127482; &#127464;&#127475; &#127470;&#127475; &#127481;&#127479;</div>
+    <div class="menu-title">Frontiera Nord</div>
+    <div class="menu-sub">Posto di Controllo B4 &mdash; Brennero</div>
+    <div class="menu-date-badge" id="menu-date-badge">14.03.2025</div>
+    <div class="menu-modes">
+      <div class="mode-card classic" onclick="startGame('normal')">
+        <div class="mode-icon">&#128308;</div>
+        <div class="mode-name">Modalit&agrave; Classica</div>
+        <div class="mode-desc">Controlla i documenti. Tre errori chiudono la frontiera. C&apos;&egrave; un livello finale al termine di tutte le regole.</div>
+        <div class="mode-detail">Max 3 errori &middot; Livello finale</div>
+      </div>
+      <div class="mode-card sandbox-m" onclick="startGame('sandbox')">
+        <div class="mode-icon">&#128309;</div>
+        <div class="mode-name">Modalit&agrave; Sandbox</div>
+        <div class="mode-desc">Nessun limite di errori. Esplora le regole e impara senza pressione.</div>
+        <div class="mode-detail">Errori illimitati &middot; Nessun finale</div>
+      </div>
+    </div>
+    <div class="menu-footer">MINISTERO DELL&apos;INTERNO &mdash; DIPARTIMENTO CONTROLLO FRONTIERE &mdash; USO INTERNO</div>
+  </div>
+  <div id="topbar">
+    <div class="station-name">&#127470;&#127481;&nbsp;<span>//</span>&nbsp;Brennero B4</div>
+    <div class="console-group">
+      <div class="console-block"><div class="cb-label">Data turno</div><div id="date-display">&mdash;</div></div>
+      <div class="console-block"><div class="cb-label">Approvati</div><div class="cb-val" id="score-el">0</div></div>
+      <div class="console-block"><div class="cb-label">Livello</div><div id="level-badge">LV 1</div></div>
+      <div class="console-block"><div class="cb-label">Modalit&agrave;</div><div id="mode-badge">CLASSICA</div></div>
+      <div class="console-block"><div class="cb-label">Errori</div><div class="err-leds"><div class="led" id="led0"></div><div class="led" id="led1"></div><div class="led" id="led2"></div></div></div>
+    </div>
+  </div>
+  <div id="return-zone">
+    <span class="rz-arrow">&#8593;</span>
+    <span class="rz-label">Restituisci i documenti &mdash; trascina qui</span>
+    <span class="rz-arrow">&#8593;</span>
+    <span id="return-progress" style="margin-left:10px;"></span>
+  </div>
+  <div id="play-area">
+    <div id="manual-btn" onclick="toggleManual()">&#9776; Manuale</div>
+  </div>
+  <div id="rulebook">
+    <div class="rb-header"><div class="rb-title">Regolamento</div><div class="rb-edition" id="rb-edition">Livello 1</div></div>
+    <div class="rb-rules" id="rb-rules"></div>
+    <div class="rb-decision">
+      <button class="btn-approve" id="btn-approve" onclick="decide(true)">&#10003; &nbsp;Lascia passare</button>
+      <button class="btn-deny" id="btn-deny" onclick="decide(false)">&#10005; &nbsp;Respingi</button>
+    </div>
+  </div>
+  <div id="stamp-overlay"><div class="stamp-text" id="stamp-text">APPROVATO</div></div>
+  <div id="levelup-banner"></div>
+  <div id="notif"></div>
+  <div id="gameover">
+    <div class="go-label" id="go-label">Fine turno</div>
+    <div class="go-title" id="go-title">Frontiera Chiusa</div>
+    <div class="go-score" id="go-score">0</div>
+    <div class="go-sub" id="go-sub">persone elaborate correttamente</div>
+    <div class="go-stats" id="go-stats" style="display:none;">
+      <div><div class="go-stat-val" id="gs-correct">0</div><div class="go-stat-lbl">corretti</div></div>
+      <div><div class="go-stat-val" id="gs-errors">0</div><div class="go-stat-lbl">errori</div></div>
+      <div><div class="go-stat-val" id="gs-approved">0</div><div class="go-stat-lbl">approvati</div></div>
+      <div><div class="go-stat-val" id="gs-acc">0%</div><div class="go-stat-lbl">precisione</div></div>
+    </div>
+    <div class="go-sub" id="go-level" style="margin-top:4px;"></div>
+    <div class="go-btns">
+      <button class="go-btn" onclick="restartGame()">Nuovo turno</button>
+      <button class="go-btn menu-btn" onclick="goToMenu()">Menu principale</button>
+    </div>
+  </div>
+  <div id="touch-controls">
+    <button class="touch-btn t-approve" onclick="decide(true)">&#10003; Lascia passare</button>
+    <button class="touch-btn t-deny" onclick="decide(false)">&#10005; Respingi</button>
+  </div>
+</div>
+
+<script>
+const GAME_DATE=new Date(2025,2,14);
+function fmtDate(d){return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();}
+function parseDate(s){const p=s.split('.').map(Number);return new Date(p[2],p[1]-1,p[0]);}
+function isExpired(s){return parseDate(s)<GAME_DATE;}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
+function randFuture(a,b){return fmtDate(addDays(GAME_DATE,ri(a,b)));}
+function randPast(a,b){return fmtDate(addDays(GAME_DATE,-ri(a,b)));}
+function rr(a){return a[Math.floor(Math.random()*a.length)];}
+function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+
+const COUNTRIES=[
+  {name:'Germania',code:'DEU',flag:'🇩🇪',cat:'schengen'},{name:'Francia',code:'FRA',flag:'🇫🇷',cat:'schengen'},
+  {name:'Austria',code:'AUT',flag:'🇦🇹',cat:'schengen'},{name:'Svizzera',code:'CHE',flag:'🇨🇭',cat:'schengen'},
+  {name:'Spagna',code:'ESP',flag:'🇪🇸',cat:'schengen'},{name:'Portogallo',code:'PRT',flag:'🇵🇹',cat:'schengen'},
+  {name:'Paesi Bassi',code:'NLD',flag:'🇳🇱',cat:'schengen'},{name:'Belgio',code:'BEL',flag:'🇧🇪',cat:'schengen'},
+  {name:'Svezia',code:'SWE',flag:'🇸🇪',cat:'schengen'},{name:'Norvegia',code:'NOR',flag:'🇳🇴',cat:'schengen'},
+  {name:'Grecia',code:'GRC',flag:'🇬🇷',cat:'schengen'},{name:'Polonia',code:'POL',flag:'🇵🇱',cat:'schengen'},
+  {name:'Croazia',code:'HRV',flag:'🇭🇷',cat:'schengen'},{name:'Ungheria',code:'HUN',flag:'🇭🇺',cat:'schengen'},
+  {name:'Rep. Ceca',code:'CZE',flag:'🇨🇿',cat:'schengen'},{name:'Danimarca',code:'DNK',flag:'🇩🇰',cat:'schengen'},
+  {name:'Finlandia',code:'FIN',flag:'🇫🇮',cat:'schengen'},{name:'Slovenia',code:'SVN',flag:'🇸🇮',cat:'schengen'},
+  {name:'Romania',code:'ROU',flag:'🇷🇴',cat:'eu_non_sch'},{name:'Bulgaria',code:'BGR',flag:'🇧🇬',cat:'eu_non_sch'},
+  {name:'Cipro',code:'CYP',flag:'🇨🇾',cat:'eu_non_sch'},
+  {name:'Stati Uniti',code:'USA',flag:'🇺🇸',cat:'visa_free'},{name:'Canada',code:'CAN',flag:'🇨🇦',cat:'visa_free'},
+  {name:'Regno Unito',code:'GBR',flag:'🇬🇧',cat:'visa_free'},{name:'Australia',code:'AUS',flag:'🇦🇺',cat:'visa_free'},
+  {name:'Giappone',code:'JPN',flag:'🇯🇵',cat:'visa_free'},{name:'Corea del Sud',code:'KOR',flag:'🇰🇷',cat:'visa_free'},
+  {name:'Ucraina',code:'UKR',flag:'🇺🇦',cat:'visa_free'},{name:'Serbia',code:'SRB',flag:'🇷🇸',cat:'visa_free'},
+  {name:'Brasile',code:'BRA',flag:'🇧🇷',cat:'visa_free'},{name:'Argentina',code:'ARG',flag:'🇦🇷',cat:'visa_free'},
+  {name:'Messico',code:'MEX',flag:'🇲🇽',cat:'visa_free'},{name:'Nuova Zelanda',code:'NZL',flag:'🇳🇿',cat:'visa_free'},
+  {name:'Russia',code:'RUS',flag:'🇷🇺',cat:'visa_req'},{name:'Cina',code:'CHN',flag:'🇨🇳',cat:'visa_req'},
+  {name:'India',code:'IND',flag:'🇮🇳',cat:'visa_req'},{name:'Turchia',code:'TUR',flag:'🇹🇷',cat:'visa_req'},
+  {name:'Marocco',code:'MAR',flag:'🇲🇦',cat:'visa_req'},{name:'Egitto',code:'EGY',flag:'🇪🇬',cat:'visa_req'},
+  {name:'Algeria',code:'DZA',flag:'🇩🇿',cat:'visa_req'},{name:'Pakistan',code:'PAK',flag:'🇵🇰',cat:'visa_req'},
+  {name:'Bangladesh',code:'BGD',flag:'🇧🇩',cat:'visa_req'},{name:'Nigeria',code:'NGA',flag:'🇳🇬',cat:'visa_req'},
+  {name:'Iran',code:'IRN',flag:'🇮🇷',cat:'visa_req'},{name:'Tunisia',code:'TUN',flag:'🇹🇳',cat:'visa_req'},
+  {name:'Senegal',code:'SEN',flag:'🇸🇳',cat:'visa_req'},{name:'Ghana',code:'GHA',flag:'🇬🇭',cat:'visa_req'},
+];
+
+const NAMES={
+  DEU:{m:['Klaus','Markus','Hans','Felix','Werner'],f:['Anna','Sabine','Monika','Lena','Clara'],l:['Müller','Schmidt','Bauer','Fischer','Weber']},
+  FRA:{m:['Jean','Pierre','Antoine','Thomas','Michel'],f:['Marie','Sophie','Claire','Isabelle','Emma'],l:['Dupont','Martin','Bernard','Moreau','Laurent']},
+  AUT:{m:['Wolfgang','Michael','Andreas','Christoph','Franz'],f:['Elisabeth','Theresa','Katharina','Julia','Sandra'],l:['Huber','Gruber','Maier','Steiner','Pichler']},
+  CHE:{m:['Beat','Urs','Christoph','Daniel','Reto'],f:['Vreni','Monika','Heidi','Sara','Nadine'],l:['Meier','Keller','Gerber','Brunner','Hofer']},
+  ESP:{m:['Carlos','Antonio','José','Alejandro','Javier'],f:['María','Ana','Carmen','Laura','Marta'],l:['García','Martínez','López','González','Rodríguez']},
+  PRT:{m:['João','António','Manuel','Pedro','Rui'],f:['Maria','Ana','Carla','Sofia','Inês'],l:['Silva','Santos','Ferreira','Oliveira','Costa']},
+  NLD:{m:['Jan','Pieter','Daan','Sander','Kees'],f:['Emma','Sophie','Lotte','Anne','Fleur'],l:['de Vries','Jansen','Bakker','Smit','de Jong']},
+  BEL:{m:['Luc','Bart','Tim','Jonas','Wouter'],f:['Marie','Julie','Sarah','An','Sofie'],l:['Peeters','Claes','Maes','Willems','Jacobs']},
+  SWE:{m:['Erik','Lars','Anders','Johan','Björn'],f:['Anna','Karin','Ingrid','Maja','Elin'],l:['Andersson','Johansson','Karlsson','Nilsson','Eriksson']},
+  NOR:{m:['Ole','Lars','Erik','Bjørn','Magnus'],f:['Ingrid','Astrid','Kari','Anne','Hilde'],l:['Hansen','Johansen','Olsen','Larsen','Andersen']},
+  GRC:{m:['Nikos','Kostas','Yannis','Petros','Dimitris'],f:['Maria','Elena','Sofia','Eleni','Katerina'],l:['Papadopoulos','Georgiou','Athanasiou','Nikolaou','Dimitriou']},
+  POL:{m:['Piotr','Krzysztof','Andrzej','Tomasz','Rafał'],f:['Anna','Maria','Katarzyna','Agnieszka','Karolina'],l:['Kowalski','Nowak','Wiśniewski','Wójcik','Zieliński']},
+  ROU:{m:['Ion','Gheorghe','Mihai','Andrei','Florin'],f:['Maria','Elena','Ana','Ioana','Mihaela'],l:['Popescu','Ionescu','Popa','Constantin','Gheorghiu']},
+  BGR:{m:['Ivan','Georgi','Dimitar','Nikolay','Stefan'],f:['Maria','Elena','Daniela','Ivanka','Milena'],l:['Ivanov','Georgiev','Dimitrov','Nikolov','Petrov']},
+  HRV:{m:['Ivan','Marko','Ante','Tomislav','Josip'],f:['Marija','Ana','Ivana','Petra','Maja'],l:['Horvat','Kovačić','Babić','Marković','Novak']},
+  HUN:{m:['László','István','Zoltán','Attila','Gábor'],f:['Erzsébet','Katalin','Mária','Anna','Éva'],l:['Nagy','Kovács','Tóth','Szabó','Horváth']},
+  CZE:{m:['Pavel','Jan','Jiří','Tomáš','Petr'],f:['Jana','Eva','Hana','Lucie','Petra'],l:['Novák','Dvořák','Procházka','Hájek','Krejčí']},
+  DNK:{m:['Lars','Søren','Anders','Niels','Henrik'],f:['Karen','Hanne','Mette','Inge','Lone'],l:['Jensen','Nielsen','Hansen','Pedersen','Andersen']},
+  FIN:{m:['Matti','Pekka','Juha','Mikko','Timo'],f:['Sari','Tiina','Leena','Päivi','Maarit'],l:['Mäkinen','Korhonen','Heikkinen','Leinonen','Virtanen']},
+  SVN:{m:['Janez','Marko','Gregor','Luka','Rok'],f:['Ana','Maja','Nina','Tanja','Katja'],l:['Novak','Horvat','Kovač','Krajnc','Vidmar']},
+  CYP:{m:['Nikos','Giorgos','Michalis','Andreas'],f:['Maria','Elena','Eleni','Christina'],l:['Christodoulou','Papadopoulos','Georgiou','Ioannou']},
+  USA:{m:['James','John','Robert','Michael','David'],f:['Mary','Patricia','Jennifer','Linda','Barbara'],l:['Smith','Johnson','Williams','Brown','Jones']},
+  CAN:{m:['Michael','James','David','William','Daniel'],f:['Emily','Sarah','Jessica','Amanda','Nicole'],l:['Smith','Brown','Tremblay','Martin','Roy']},
+  GBR:{m:['James','Oliver','Harry','George','Jack'],f:['Olivia','Emily','Sophie','Grace','Charlotte'],l:['Smith','Jones','Williams','Taylor','Davies']},
+  AUS:{m:['Liam','Noah','Jack','Oliver','Lucas'],f:['Charlotte','Olivia','Amelia','Isla','Mia'],l:['Smith','Jones','Williams','Brown','Wilson']},
+  JPN:{m:['Kenji','Hiroshi','Taro','Yuki','Sota'],f:['Yuki','Hana','Sakura','Ai','Miku'],l:['Tanaka','Suzuki','Sato','Yamamoto','Watanabe']},
+  KOR:{m:['Minjun','Seojun','Jihoon','Sungmin'],f:['Jiyeon','Minji','Soyeon','Yuna'],l:['Kim','Lee','Park','Choi','Jung']},
+  UKR:{m:['Dmytro','Oleksiy','Vasyl','Ivan','Andriy'],f:['Olena','Natalia','Iryna','Oksana','Yulia'],l:['Kovalenko','Shevchenko','Bondarenko','Kravchenko','Melnyk']},
+  SRB:{m:['Nikola','Marko','Stefan','Aleksandar','Miloš'],f:['Ana','Jelena','Ivana','Milica','Jovana'],l:['Jovanović','Petrović','Nikolić','Marković','Đorđević']},
+  BRA:{m:['João','Carlos','Antônio','Paulo','Ricardo'],f:['Maria','Ana','Fernanda','Juliana','Camila'],l:['Silva','Santos','Oliveira','Souza','Rodrigues']},
+  ARG:{m:['Martín','Facundo','Nicolás','Santiago'],f:['Valentina','Lucía','Camila','Sofía'],l:['González','Rodríguez','Fernández','García']},
+  MEX:{m:['Carlos','Juan','Miguel','Alejandro'],f:['María','Ana','Sofía','Valentina'],l:['García','Hernández','Martínez','López']},
+  NZL:{m:['James','William','Oliver','Jack'],f:['Olivia','Charlotte','Isabella','Mia'],l:['Smith','Brown','Wilson','Thompson']},
+  RUS:{m:['Ivan','Dmitry','Sergey','Alexei','Mikhail'],f:['Natasha','Olga','Tatiana','Elena','Irina'],l:['Ivanov','Petrov','Sidorov','Volkov','Smirnov']},
+  CHN:{m:['Wei','Fang','Lei','Ming','Jian'],f:['Fang','Mei','Li','Xia','Yan'],l:['Wang','Li','Zhang','Liu','Chen']},
+  IND:{m:['Raj','Amit','Vikram','Suresh','Ajay'],f:['Priya','Anjali','Sunita','Kavita','Pooja'],l:['Sharma','Verma','Gupta','Singh','Kumar']},
+  TUR:{m:['Mehmet','Mustafa','Ali','Hüseyin','Ahmet'],f:['Fatma','Ayşe','Hatice','Zeynep','Elif'],l:['Yılmaz','Kaya','Demir','Şahin','Çelik']},
+  MAR:{m:['Mohammed','Ahmed','Youssef','Hamid','Karim'],f:['Fatima','Khadija','Amina','Zineb','Leila'],l:['El Idrissi','Benali','Chaoui','Amrani','Berrada']},
+  EGY:{m:['Mohamed','Ahmed','Mahmoud','Hassan','Ibrahim'],f:['Fatima','Nour','Dina','Rana','Sara'],l:['Ibrahim','Hassan','Ali','Mahmoud','Khalil']},
+  DZA:{m:['Mohamed','Ahmed','Karim','Rachid','Yacine'],f:['Fatima','Nadia','Samira','Leila','Asma'],l:['Bensalem','Amara','Bouazza','Khaled','Benali']},
+  PAK:{m:['Muhammad','Ahmed','Ali','Hassan','Bilal'],f:['Fatima','Aisha','Zainab','Maryam','Sana'],l:['Khan','Ahmed','Ali','Malik','Chaudhry']},
+  BGD:{m:['Mohammad','Rahim','Karim','Hasan','Rafiq'],f:['Fatema','Nasrin','Shapla','Mitu','Ritu'],l:['Rahman','Islam','Ahmed','Ali','Hossain']},
+  NGA:{m:['Emeka','Chukwu','Bola','Ade','Tunde'],f:['Ngozi','Amaka','Bisi','Funke','Chioma'],l:['Okonkwo','Adeyemi','Ibrahim','Okafor','Bello']},
+  IRN:{m:['Ali','Mohammad','Hassan','Reza'],f:['Fateme','Maryam','Sara','Zahra'],l:['Hosseini','Ahmadi','Karimi','Moradi']},
+  TUN:{m:['Mohamed','Ahmed','Ali','Youssef'],f:['Fatma','Nadia','Amel','Sonia'],l:['Ben Ali','Jebali','Chaabane','Ksouri']},
+  SEN:{m:['Moussa','Ibrahima','Oumar','Mamadou'],f:['Fatou','Aminata','Mariama','Aissatou'],l:['Diallo','Ndiaye','Sow','Fall']},
+  GHA:{m:['Kwame','Kofi','Kwesi','Yaw'],f:['Akua','Abena','Adwoa','Efua'],l:['Mensah','Asante','Boateng','Agyei']},
+};
+const DFLT={m:['Alex','Jordan'],f:['Alex','Jordan'],l:['Martin','Brown']};
+function makeName(code,sex){const p=NAMES[code]||DFLT;return{fn:rr(sex==='M'?p.m:p.f),ln:rr(p.l)};}
+
+let BANNED_COUNTRY=null,EXTRA_DOC_PROFESSION=null;
+function generateModularRules(){
+  BANNED_COUNTRY=rr(COUNTRIES.filter(c=>c.cat==='visa_req'));
+  EXTRA_DOC_PROFESSION=rr(['Medico','Giornalista','Ricercatore','Veterinario']);
+}
+
+const MAX_RULE_LEVEL=11;
+const FINALE_LEVEL=16;
+
+function getRuleSet(){
+  return[
+    {id:'valid_passport',minLevel:1,text:'Il passaporto deve essere valido (non scaduto).',
+      check:p=>!isExpired(p.ppExpiry)},
+    {id:'visa_req',minLevel:1,text:'I cittadini dei paesi con obbligo di visto devono presentare un visto Schengen valido.',
+      check:p=>{if(p.country.cat!=='visa_req')return true;return!!p.visa&&!isExpired(p.visa.expiry);}},
+    {id:'overstay',minLevel:2,text:'I cittadini in esenzione visto devono presentare la dichiarazione di ingresso Schengen. Soggiorno max 90 giorni.',
+      check:p=>{if(p.country.cat!=='visa_free')return true;if(!p.entryDate)return false;return addDays(parseDate(p.entryDate),90)>=GAME_DATE;}},
+    {id:'work_permit',minLevel:3,text:'I lavoratori devono presentare un contratto di lavoro valido.',
+      check:p=>{if(p.occupation!=='Lavoratore')return true;return!!p.workContract&&!isExpired(p.workContract.expiry);}},
+    {id:'visa_name',minLevel:4,text:'Il nome sul visto deve corrispondere esattamente al passaporto.',
+      check:p=>{if(!p.visa)return true;return p.visa.holderName===p.nameObj.fn+' '+p.nameObj.ln;}},
+    {id:'minor',minLevel:5,text:'I minori devono essere accompagnati da un tutore adulto.',
+      check:p=>{if(!p.isMinor)return true;return p.hasGuardian;}},
+    {id:'banned',minLevel:6,text:'DIVIETO TEMPORANEO: i cittadini di '+(BANNED_COUNTRY?BANNED_COUNTRY.name:'?')+' non possono entrare per ordine ministeriale.',
+      check:p=>!BANNED_COUNTRY||p.country.code!==BANNED_COUNTRY.code},
+    {id:'health',minLevel:7,text:'I '+(EXTRA_DOC_PROFESSION||'?')+' devono presentare certificato sanitario internazionale valido.',
+      check:p=>{if(p.occupation!==EXTRA_DOC_PROFESSION)return true;return!!p.healthCert&&!isExpired(p.healthCert.expiry);}},
+    {id:'student',minLevel:8,text:'Gli studenti devono presentare lettera di iscrizione universitaria valida.',
+      check:p=>{if(p.occupation!=='Studente')return true;return!!p.enrollmentLetter&&!isExpired(p.enrollmentLetter.expiry);}},
+    {id:'diplomat',minLevel:9,text:'I diplomatici devono presentare nota verbale del ministero di appartenenza.',
+      check:p=>{if(p.occupation!=='Diplomatico')return true;return!!p.diplomatNote;}},
+    {id:'pp6mo',minLevel:10,text:'Il passaporto deve avere almeno 6 mesi di validità residua.',
+      check:p=>parseDate(p.ppExpiry)>=addDays(GAME_DATE,180)},
+    {id:'visa30d',minLevel:11,text:'I visti devono avere almeno 30 giorni di validità residua.',
+      check:p=>{if(!p.visa)return true;return parseDate(p.visa.expiry)>=addDays(GAME_DATE,30);}},
+  ];
+}
+function getActiveRules(lv){return getRuleSet().filter(r=>r.minLevel<=Math.min(lv,MAX_RULE_LEVEL));}
+
+// MANUAL
+let manualEl=null,manualPage=0,manualPages=[];
+
+function buildManualPages(){
+  const sch=COUNTRIES.filter(c=>c.cat==='schengen');
+  const eu=COUNTRIES.filter(c=>c.cat==='eu_non_sch');
+  const vf=COUNTRIES.filter(c=>c.cat==='visa_free');
+  const vr=COUNTRIES.filter(c=>c.cat==='visa_req');
+  const row=c=>'<div class="manual-entry"><span class="me-flag">'+c.flag+'</span><span class="me-name">'+c.name+'</span></div>';
+  return[
+    {title:'MANUALE DI FRONTIERA',body:'<div class="manual-page-sub">Edizione corrente &mdash; Uso interno</div><div style="font-family:var(--font-type);font-size:12px;color:var(--ink);line-height:1.7;margin-bottom:10px;">Il presente manuale raccoglie le disposizioni per il controllo documentale al Posto B4 &mdash; Brennero.<br><br>Verificare tutti i documenti di ogni passeggero e determinare se l\'ingresso &egrave; autorizzato.<br><br>Data di riferimento: <strong>'+fmtDate(GAME_DATE)+'</strong></div><div class="manual-section-head">Indice</div><div class="manual-entry"><span>Pag. 2 &mdash; Zona Schengen</span></div><div class="manual-entry"><span>Pag. 3 &mdash; UE fuori Schengen</span></div><div class="manual-entry"><span>Pag. 4 &mdash; Esenzione visto</span></div><div class="manual-entry"><span>Pag. 5&ndash;6 &mdash; Visto obbligatorio</span></div>'},
+    {title:'ZONA SCHENGEN',body:'<div class="manual-page-sub">Libera circolazione &mdash; documento d\'identit&agrave; valido sufficiente</div>'+sch.map(row).join('')},
+    {title:'UE &mdash; FUORI SCHENGEN',body:'<div class="manual-page-sub">Membri UE non aderenti all\'area Schengen &mdash; nessun visto, nessun limite</div>'+eu.map(row).join('')+'<div class="manual-section-head">Nota</div><div style="font-family:var(--font-type);font-size:11px;color:var(--ink);line-height:1.5;">Passaporto o carta d\'identit&agrave; validi. Soggiorno illimitato.</div>'},
+    {title:'ESENZIONE VISTO',body:'<div class="manual-page-sub">Accordo bilaterale &mdash; nessun visto, max 90 giorni</div><div style="font-family:var(--font-type);font-size:11px;color:var(--ink-faded);margin-bottom:8px;line-height:1.5;">Nessun visto richiesto. Passaporto valido sufficiente. Il soggiorno nell\'area Schengen non pu&ograve; superare 90 giorni dalla data di ingresso dichiarata. (Verifica attiva dal livello 2.)</div>'+vf.map(row).join('')},
+    {title:'VISTO OBBLIGATORIO &mdash; I',body:'<div class="manual-page-sub">Visto Schengen sempre richiesto</div><div style="font-family:var(--font-type);font-size:11px;color:var(--ink-faded);margin-bottom:8px;">Il visto deve essere valido e intestato al titolare del passaporto.</div>'+vr.slice(0,Math.ceil(vr.length/2)).map(row).join('')},
+    {title:'VISTO OBBLIGATORIO &mdash; II',body:'<div class="manual-page-sub">Visto Schengen sempre richiesto (continua)</div>'+vr.slice(Math.ceil(vr.length/2)).map(row).join('')+'<div class="manual-section-head">Nota bene</div><div style="font-family:var(--font-type);font-size:11px;color:var(--ink);line-height:1.5;">Qualsiasi paese non presente in questo manuale va trattato come paese con obbligo di visto.</div>'},
+  ];
+}
+
+function manualHTML(){
+  const p=manualPages[manualPage];
+  return '<div class="manual-titlebar"><span class="doc-flag">&#128218;</span><span class="mt-title">Manuale &mdash; Frontiera B4</span><span class="manual-close" onclick="closeManual()">&#10005;</span></div>'
+    +'<div class="manual-body-scroll"><div class="manual-page"><div class="manual-page-title">'+p.title+'</div>'+p.body+'</div></div>'
+    +'<div class="manual-nav"><button class="mnav-btn" onclick="manualPrev()" '+(manualPage===0?'disabled':'')+'>&#8592; Prec.</button>'
+    +'<span class="manual-page-num">'+(manualPage+1)+' / '+manualPages.length+'</span>'
+    +'<button class="mnav-btn" onclick="manualNext()" '+(manualPage===manualPages.length-1?'disabled':'')+'>Succ. &#8594;</button></div>';
+}
+function toggleManual(){if(manualEl&&manualEl.parentNode)closeManual();else openManual();}
+function openManual(){
+  if(!manualPages.length)manualPages=buildManualPages();
+  manualPage=0;
+  const pa=document.getElementById('play-area');
+  const pw=pa.offsetWidth||600,ph=pa.offsetHeight||400;
+  manualEl=document.createElement('div');
+  manualEl.className='manual-window';
+  manualEl.style.left=Math.max(10,pw-320)+'px';
+  manualEl.style.top=Math.max(10,ph-380)+'px';
+  manualEl.style.transform='rotate('+(( Math.random()-.5)*2)+'deg)';
+  manualEl.innerHTML=manualHTML();
+  makeDraggable(manualEl);
+  pa.appendChild(manualEl);
+}
+function closeManual(){if(manualEl&&manualEl.parentNode){manualEl.parentNode.removeChild(manualEl);}manualEl=null;}
+function manualNext(){if(manualPage<manualPages.length-1){manualPage++;manualEl.innerHTML=manualHTML();makeDraggable(manualEl);}}
+function manualPrev(){if(manualPage>0){manualPage--;manualEl.innerHTML=manualHTML();makeDraggable(manualEl);}}
+
+// PERSON GENERATION
+const EMPLOYERS=['Fiat SpA','Ferrari SpA','Pirelli','Barilla Group','ENI','Luxottica','Ferrero','Leonardo SpA'];
+const UNIVERSITIES=['Univ. di Torino','Politecnico di Milano','Univ. di Bologna','Univ. di Padova','Sapienza Roma'];
+
+let level=1;
+function generatePerson(){
+  const country=rr(COUNTRIES);
+  const sex=rr(['M','F']);
+  const nameObj=makeName(country.code,sex);
+  nameObj.full=nameObj.fn+' '+nameObj.ln;
+  const birthYr=ri(1952,2010);
+  const dob=String(ri(1,28)).padStart(2,'0')+'.'+String(ri(1,12)).padStart(2,'0')+'.'+birthYr;
+  const age=GAME_DATE.getFullYear()-birthYr;
+  const isMinor=age<18;
+  const ppNum=country.code+ri(10000000,99999999);
+  let occ=['Turista','Commerciante'];
+  if(!isMinor){
+    if(level>=3)occ.push('Lavoratore');
+    if(level>=5)occ.push('Studente','Diplomatico');
+    if(level>=7)occ.push(EXTRA_DOC_PROFESSION);
+    else occ.push('Medico','Giornalista','Ricercatore','Veterinario');
+  }
+  const occupation=isMinor?'Turista':rr(occ);
+  const extraDiff=Math.max(0,level-MAX_RULE_LEVEL)*0.04;
+  let wantValid=Math.random()<(0.52-extraDiff);
+  const ppExpired=!wantValid&&Math.random()<0.25;
+  let ppExpiry=ppExpired?randPast(20,900):randFuture(30,1825);
+  let ppShort=null;
+  if(!ppExpired&&level>=10&&!wantValid&&Math.random()<0.3)ppShort=fmtDate(addDays(GAME_DATE,ri(10,170)));
+  const finalExp=ppShort||ppExpiry;
+  let visa=null,workContract=null,healthCert=null,enrollmentLetter=null,diplomatNote=null,hasGuardian=false,entryDate=null;
+  if(country.cat==='visa_req'){
+    if(wantValid&&!ppExpired&&!ppShort){
+      let vExp=randFuture(level>=11?31:20,400);
+      let hName=nameObj.full;
+      if(level>=4&&Math.random()<0.2){const f=makeName(country.code,sex);hName=f.fn+' '+f.ln;wantValid=false;}
+      visa={holderName:hName,type:'Tipo C — Schengen',expiry:vExp,country:country.name};
+    } else {
+      if(Math.random()<0.5)visa=null;
+      else visa={holderName:nameObj.full,type:'Tipo C — Schengen',expiry:randPast(5,300),country:country.name};
+      wantValid=false;
+    }
+  }
+  if(country.cat==='visa_free'&&level>=2){
+    if(wantValid)entryDate=fmtDate(addDays(GAME_DATE,-ri(1,85)));
+    else if(Math.random()<0.35){entryDate=fmtDate(addDays(GAME_DATE,-ri(91,200)));wantValid=false;}
+    else entryDate=fmtDate(addDays(GAME_DATE,-ri(1,85)));
+  }
+  if(occupation==='Lavoratore'&&level>=3){
+    if(wantValid&&!ppExpired&&!ppShort)workContract={employer:rr(EMPLOYERS),expiry:randFuture(60,730)};
+    else if(!ppExpired&&!ppShort){if(Math.random()<0.45){workContract=null;wantValid=false;}else{workContract={employer:rr(EMPLOYERS),expiry:randPast(5,200)};wantValid=false;}}
+  }
+  if(isMinor&&level>=5){hasGuardian=wantValid||Math.random()>0.45;if(!hasGuardian)wantValid=false;}
+  if(occupation===EXTRA_DOC_PROFESSION&&level>=7){
+    if(wantValid&&!ppExpired&&!ppShort)healthCert={expiry:randFuture(30,365)};
+    else if(!ppExpired&&!ppShort&&Math.random()<0.4){healthCert=null;wantValid=false;}
+  }
+  if(occupation==='Studente'&&level>=8){
+    if(wantValid&&!ppExpired&&!ppShort)enrollmentLetter={university:rr(UNIVERSITIES),expiry:randFuture(60,400)};
+    else if(!ppExpired&&!ppShort&&Math.random()<0.4){enrollmentLetter=null;wantValid=false;}
+  }
+  if(occupation==='Diplomatico'&&level>=9){
+    if(wantValid&&!ppExpired&&!ppShort)diplomatNote={ministry:'Min. degli Esteri — '+country.name,date:fmtDate(addDays(GAME_DATE,-ri(1,30)))};
+    else if(!ppExpired&&!ppShort&&Math.random()<0.4){diplomatNote=null;wantValid=false;}
+  }
+  if(BANNED_COUNTRY&&country.code===BANNED_COUNTRY.code&&level>=6)wantValid=false;
+  const person={country,sex,nameObj,dob,age,isMinor,ppNum,ppExpiry:finalExp,occupation,visa,workContract,healthCert,enrollmentLetter,diplomatNote,hasGuardian,entryDate};
+  const rules=getActiveRules(level);
+  let shouldApprove=true,failReason='';
+  for(const r of rules){if(!r.check(person)){shouldApprove=false;failReason=r.text;break;}}
+  return Object.assign(person,{shouldApprove,failReason});
+}
+
+// DRAG
+let activeDrag=null,dragBaseLeft=0,dragBaseTop=0,dragStartX=0,dragStartY=0;
+function startDrag(el,px,py){
+  activeDrag=el;
+  dragBaseLeft=parseInt(el.style.left)||0;dragBaseTop=parseInt(el.style.top)||0;
+  dragStartX=px;dragStartY=py;
+  el.classList.add('dragging');
+  el.style.zIndex=String(1000+(Date.now()%8000));
+}
+function onPointerDown(e){
+  if(e.target.tagName==='BUTTON'||e.target.classList.contains('manual-close'))return;
+  const t=e.touches?e.touches[0]:e;
+  startDrag(e.currentTarget,t.clientX,t.clientY);
+  e.preventDefault();
+}
+document.addEventListener('mousemove',function(e){
+  if(!activeDrag)return;
+  activeDrag.style.left=(dragBaseLeft+e.clientX-dragStartX)+'px';
+  activeDrag.style.top=(dragBaseTop+e.clientY-dragStartY)+'px';
+  updateRZHover(e.clientY);
+});
+document.addEventListener('touchmove',function(e){
+  if(!activeDrag)return;
+  var t=e.touches[0];
+  activeDrag.style.left=(dragBaseLeft+t.clientX-dragStartX)+'px';
+  activeDrag.style.top=(dragBaseTop+t.clientY-dragStartY)+'px';
+  updateRZHover(t.clientY);
+  e.preventDefault();
+},{passive:false});
+document.addEventListener('mouseup',endDrag);
+document.addEventListener('touchend',endDrag);
+function updateRZHover(cy){
+  var rz=document.getElementById('return-zone'),r=rz.getBoundingClientRect();
+  if(activeDrag&&cy>=r.top&&cy<=r.bottom+50)rz.classList.add('drag-over');
+  else rz.classList.remove('drag-over');
+}
+function endDrag(){
+  if(!activeDrag)return;
+  activeDrag.classList.remove('dragging');
+  var rect=activeDrag.getBoundingClientRect();
+  var rz=document.getElementById('return-zone'),rzr=rz.getBoundingClientRect();
+  var midY=rect.top+rect.height/2;
+  if(midY<rzr.bottom+40&&!activeDrag.classList.contains('manual-window'))returnDocument(activeDrag);
+  activeDrag=null;
+  document.getElementById('return-zone').classList.remove('drag-over');
+}
+function makeDraggable(el){
+  el.addEventListener('mousedown',onPointerDown);
+  el.addEventListener('touchstart',onPointerDown,{passive:false});
+}
+
+// GAME STATE
+let score=0,errors=0,gameMode='normal';
+let totalDec=0,totalCorrect=0,totalApproved=0;
+const MAX_ERR=3;
+let currentPerson=null,returnedCount=0,totalDocs=0,decisionMade=false,gameOverFlag=false;
+
+function updateHUD(){
+  document.getElementById('score-el').textContent=score;
+  document.getElementById('level-badge').textContent=level>MAX_RULE_LEVEL?'LV '+level+' ★':'LV '+level;
+  for(var i=0;i<3;i++)document.getElementById('led'+i).className='led'+(i<errors?' on':'');
+  var mb=document.getElementById('mode-badge');
+  if(gameMode==='sandbox'){mb.style.cssText='padding:3px 9px;border-radius:3px;font-family:var(--font-title);font-size:11px;font-weight:500;letter-spacing:.1em;border:1px solid #3b5bdb;background:#1a1a2a;color:#90b0ff;';mb.textContent='SANDBOX';}
+  else{mb.style.cssText='padding:3px 9px;border-radius:3px;font-family:var(--font-title);font-size:11px;font-weight:500;letter-spacing:.1em;border:1px solid #276749;background:#1a2a1a;color:#6ee7b7;';mb.textContent='CLASSICA';}
+}
+function renderRules(highlightNew){
+  var active=getActiveRules(level);
+  document.getElementById('rb-rules').innerHTML=active.map(function(r){
+    var isNew=highlightNew&&r.minLevel===Math.min(level,MAX_RULE_LEVEL);
+    return '<div class="rule-entry active '+(isNew?'new-rule':'')+'">'+( isNew?'<strong>&#9733; NUOVA:</strong> ':'')+r.text+'</div>';
+  }).join('<hr class="rb-divider">');
+  document.getElementById('rb-edition').textContent=level>MAX_RULE_LEVEL?'Livello '+level+' — tutte le regole attive':'Livello '+level+' — '+active.length+' regole';
+}
+
+function clearDocs(){
+  document.querySelectorAll('.doc-window').forEach(function(el){el.remove();});
+  returnedCount=0;totalDocs=0;
+}
+function createWindow(title,bodyHTML,extraClass,x,y,flag){
+  var el=document.createElement('div');
+  el.className='doc-window '+(extraClass||'');
+  var pa=document.getElementById('play-area');
+  var maxX=Math.max(0,(pa.offsetWidth||600)-270);
+  var maxY=Math.max(0,(pa.offsetHeight||400)-200);
+  el.style.left=Math.min(Math.max(x,4),maxX)+'px';
+  el.style.top=Math.min(Math.max(y,4),maxY)+'px';
+  el.innerHTML='<div class="doc-titlebar"><span class="doc-flag">'+(flag||'📄')+'</span><span class="doc-title-text">'+title+'</span></div><div class="doc-body">'+bodyHTML+'</div>';
+  makeDraggable(el);
+  pa.appendChild(el);totalDocs++;
+  return el;
+}
+function spawnDocuments(p){
+  var pa=document.getElementById('play-area');
+  var pw=pa.offsetWidth||600,ph=pa.offsetHeight||400;
+  var sm=pw<480;
+  var cx=sm?6:Math.floor(pw*.05),cy=sm?4:Math.floor(ph*.06);
+  var c2=sm?6:Math.floor(pw*.44);
+  // Passport — no avatar, no hints
+  var mrzN=(p.nameObj.ln+'<<'+p.nameObj.fn).toUpperCase().replace(/[^A-Z<]/g,'').padEnd(39,'<').substring(0,39);
+  var mrzL2=p.ppNum.padEnd(9,'<').substring(0,9)+'0'+p.country.code+p.dob.replace(/\./g,'').substring(2)+p.sex+p.ppExpiry.replace(/\./g,'').substring(2)+'<<<<<<4';
+  var ppHTML='<div class="pp-header"><div class="pp-nation">'+p.country.name+'</div><div class="pp-subtitle">Passaporto &middot; Passport</div></div>'
+    +'<div class="pp-photo"></div>'
+    +'<div class="pp-grid">'
+    +'<div class="pp-field"><div class="pp-field-label">Cognome / Surname</div><div class="pp-field-val">'+p.nameObj.ln+'</div></div>'
+    +'<div class="pp-field"><div class="pp-field-label">Nome / Given name</div><div class="pp-field-val">'+p.nameObj.fn+'</div></div>'
+    +'<div class="pp-field"><div class="pp-field-label">Data di nascita</div><div class="pp-field-val">'+p.dob+'</div></div>'
+    +'<div class="pp-field"><div class="pp-field-label">Sesso / Sex</div><div class="pp-field-val">'+(p.sex==='M'?'M':'F')+'</div></div>'
+    +'<div class="pp-field"><div class="pp-field-label">N. documento</div><div class="pp-field-val">'+p.ppNum+'</div></div>'
+    +'<div class="pp-field"><div class="pp-field-label">Professione</div><div class="pp-field-val">'+p.occupation+'</div></div>'
+    +'<div class="pp-field"><div class="pp-field-label">Nazionalit&agrave;</div><div class="pp-field-val">'+p.country.flag+' '+p.country.name+'</div></div>'
+    +'<div class="pp-field"><div class="pp-field-label">Scadenza / Expiry</div><div class="pp-field-val">'+p.ppExpiry+'</div></div>'
+    +'</div>'
+    +'<div class="pp-mrz">P&lt;'+p.country.code+mrzN+'<br>'+mrzL2+'</div>';
+  var w1=createWindow('Passaporto — '+p.country.name,ppHTML,'',cx+ri(-8,8),cy+ri(-4,6),p.country.flag);
+  w1.style.transform='rotate('+(( Math.random()-.5)*4)+'deg)';w1.style.width=sm?'238px':'274px';
+
+  if(p.visa){
+    var vH='<div class="visa-stamp-area"><div class="pp-grid">'
+      +'<div class="pp-field"><div class="pp-field-label">Titolare</div><div class="pp-field-val" style="font-size:12px;">'+p.visa.holderName+'</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Tipo</div><div class="pp-field-val" style="font-size:12px;">'+p.visa.type+'</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Valido per</div><div class="pp-field-val" style="font-size:12px;">'+p.visa.country+'</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Scadenza</div><div class="pp-field-val" style="font-size:12px;">'+p.visa.expiry+'</div></div>'
+      +'</div></div>';
+    var w2=createWindow('Visto Schengen',vH,'visa-doc',c2+ri(-8,8),cy+ri(8,24),'📋');
+    w2.style.transform='rotate('+(( Math.random()-.5)*5)+'deg)';w2.style.width='224px';
+  }
+  if(p.workContract){
+    var wH='<div class="contract-header"><div style="font-family:var(--font-title);font-size:12px;letter-spacing:.14em;">CONTRATTO DI LAVORO</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Lavoratore</div><div class="pp-field-val" style="font-size:12px;">'+p.nameObj.full+'</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Datore di lavoro</div><div class="pp-field-val" style="font-size:12px;">'+p.workContract.employer+'</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Valido fino al</div><div class="pp-field-val" style="font-size:12px;">'+p.workContract.expiry+'</div></div>';
+    var w3=createWindow('Contratto di Lavoro',wH,'contract-doc',cx+ri(8,24),cy+158+ri(-6,6),'📝');
+    w3.style.transform='rotate('+(( Math.random()-.5)*4)+'deg)';w3.style.width='218px';
+  }
+  if(p.healthCert){
+    var hH='<div class="contract-header"><div style="font-family:var(--font-title);font-size:11px;letter-spacing:.1em;">CERTIFICATO SANITARIO INT.LE</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Titolare</div><div class="pp-field-val" style="font-size:12px;">'+p.nameObj.full+'</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Professione</div><div class="pp-field-val" style="font-size:12px;">'+p.occupation+'</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Valido fino al</div><div class="pp-field-val" style="font-size:12px;">'+p.healthCert.expiry+'</div></div>';
+    var w4=createWindow('Certificato Sanitario',hH,'contract-doc',c2+ri(4,18),cy+136+ri(-6,6),'🏥');
+    w4.style.transform='rotate('+(( Math.random()-.5)*4)+'deg)';w4.style.width='212px';
+  }
+  if(p.enrollmentLetter){
+    var eH='<div class="contract-header"><div style="font-family:var(--font-title);font-size:11px;letter-spacing:.1em;">LETTERA DI ISCRIZIONE</div><div style="font-size:9px;color:#5a4a2a;">'+p.enrollmentLetter.university+'</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Studente</div><div class="pp-field-val" style="font-size:12px;">'+p.nameObj.full+'</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Anno acc. valido fino al</div><div class="pp-field-val" style="font-size:12px;">'+p.enrollmentLetter.expiry+'</div></div>';
+    var w5=createWindow('Iscrizione Universitaria',eH,'contract-doc',cx+ri(4,18),cy+158+ri(-6,6),'🎓');
+    w5.style.transform='rotate('+(( Math.random()-.5)*4)+'deg)';w5.style.width='212px';
+  }
+  if(p.diplomatNote){
+    var dH='<div class="contract-header"><div style="font-family:var(--font-title);font-size:11px;letter-spacing:.1em;">NOTA VERBALE</div><div style="font-size:9px;color:#5a4a2a;">'+p.diplomatNote.ministry+'</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Diplomatico</div><div class="pp-field-val" style="font-size:12px;">'+p.nameObj.full+'</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Data emissione</div><div class="pp-field-val" style="font-size:12px;">'+p.diplomatNote.date+'</div></div>';
+    var w6=createWindow('Nota Verbale',dH,'visa-doc',c2+ri(-4,14),cy+ri(-4,8),'📜');
+    w6.style.transform='rotate('+(( Math.random()-.5)*4)+'deg)';w6.style.width='212px';
+  }
+  if(p.entryDate){
+    var edH='<div class="contract-header"><div style="font-family:var(--font-title);font-size:11px;letter-spacing:.1em;">DICHIARAZIONE DI INGRESSO</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Titolare</div><div class="pp-field-val" style="font-size:12px;">'+p.nameObj.full+'</div></div>'
+      +'<div class="pp-field"><div class="pp-field-label">Data ingresso area Schengen</div><div class="pp-field-val" style="font-size:14px;">'+p.entryDate+'</div></div>';
+    var w7=createWindow('Dichiarazione Ingresso',edH,'',c2+ri(0,14),cy+144+ri(-4,4),'🗓');
+    w7.style.transform='rotate('+(( Math.random()-.5)*3)+'deg)';w7.style.width='212px';
+  }
+  updateRetProg();
+}
+
+function returnDocument(el){
+  if(el.dataset.returned)return;
+  el.dataset.returned='1';el.classList.add('returned');returnedCount++;updateRetProg();
+  if(returnedCount>=totalDocs){
+    document.getElementById('return-zone').classList.add('complete');
+    setTimeout(function(){if(!gameOverFlag)nextPerson();},500);
+  }
+}
+function updateRetProg(){
+  var p=document.getElementById('return-progress');
+  if(!totalDocs){p.textContent='';return;}
+  p.textContent=returnedCount>=totalDocs?'✓ Tutti restituiti':returnedCount+'/'+totalDocs+' restituiti';
+}
+
+function showStamp(approved){
+  var ov=document.getElementById('stamp-overlay'),tx=document.getElementById('stamp-text');
+  tx.textContent=approved?'APPROVATO':'RESPINTO';
+  tx.className='stamp-text '+(approved?'approved':'denied');
+  ov.classList.remove('show');void ov.offsetWidth;ov.classList.add('show');
+  setTimeout(function(){ov.classList.remove('show');},900);
+}
+function showNotif(msg,type){
+  var n=document.getElementById('notif');
+  n.textContent=msg;n.className='show '+type;
+  clearTimeout(window._nt);window._nt=setTimeout(function(){n.className='';},2800);
+}
+function setBtns(disabled){
+  document.getElementById('btn-approve').disabled=disabled;
+  document.getElementById('btn-deny').disabled=disabled;
+}
+
+function decide(approve){
+  if(decisionMade||gameOverFlag)return;
+  decisionMade=true;setBtns(true);totalDec++;
+  if(approve)totalApproved++;
+  var correct=approve===currentPerson.shouldApprove;
+  showStamp(approve);
+  if(correct){
+    score++;totalCorrect++;
+    showNotif(approve?'✓ Corretto — lasciato passare':'✓ Corretto — respinto','ok');
+    var newLv=Math.min(FINALE_LEVEL,Math.floor(score/5)+1);
+    if(newLv>level){
+      level=newLv;
+      renderRules(newLv<=MAX_RULE_LEVEL);
+      var b=document.getElementById('levelup-banner');
+      if(newLv<=MAX_RULE_LEVEL){b.textContent='▲ Livello '+level+' — nuove regole in vigore';}
+      else if(newLv===FINALE_LEVEL&&gameMode==='normal'){
+        gameOverFlag=true;updateHUD();setBtns(false);
+        document.getElementById('return-zone').classList.remove('complete','drag-over');
+        setTimeout(triggerFinale,1200);return;
+      } else {b.textContent='▲ Livello '+level+' — difficoltà aumentata';}
+      b.classList.add('show');clearTimeout(window._lvt);
+      window._lvt=setTimeout(function(){b.classList.remove('show');},3000);
+    }
+  } else {
+    if(gameMode==='normal'){
+      errors++;
+      if(errors>=MAX_ERR){gameOverFlag=true;showNotif('✕ Tre errori — turno terminato','bad');updateHUD();setTimeout(gameOver,1400);return;}
+    }
+    var hint=currentPerson.failReason?' — '+currentPerson.failReason.substring(0,50)+'…':'';
+    showNotif('✕ Errore'+hint+(gameMode==='sandbox'?' | Andava '+(currentPerson.shouldApprove?'approvato':'respinto'):''),'bad');
+  }
+  updateHUD();setBtns(false);
+  document.getElementById('return-zone').classList.remove('complete','drag-over');
+}
+
+function nextPerson(){
+  clearDocs();decisionMade=false;
+  document.getElementById('return-zone').classList.remove('complete','drag-over');
+  setBtns(false);currentPerson=generatePerson();spawnDocuments(currentPerson);
+}
+
+function gameOver(){
+  var go=document.getElementById('gameover');
+  go.className='show';
+  document.getElementById('go-label').textContent='Fine turno';
+  document.getElementById('go-title').textContent=gameMode==='sandbox'?'Sessione terminata':'Frontiera chiusa';
+  document.getElementById('go-score').textContent=score;
+  document.getElementById('go-sub').textContent='corretti su '+totalDec+' totali';
+  document.getElementById('go-stats').style.display='none';
+  document.getElementById('go-level').textContent='Raggiunto livello '+level;
+}
+
+function triggerFinale(){
+  var go=document.getElementById('gameover');
+  go.className='show finale';
+  document.getElementById('go-label').textContent='— turno completato —';
+  document.getElementById('go-title').textContent='Servizio concluso';
+  document.getElementById('go-score').textContent=score+' corretti';
+  document.getElementById('go-sub').textContent='Hai raggiunto il livello finale — tutte le regole superate';
+  var stats=document.getElementById('go-stats');
+  stats.style.display='grid';
+  document.getElementById('gs-correct').textContent=totalCorrect;
+  document.getElementById('gs-errors').textContent=errors;
+  document.getElementById('gs-approved').textContent=totalApproved;
+  document.getElementById('gs-acc').textContent=(totalDec>0?Math.round(totalCorrect/totalDec*100):0)+'%';
+  document.getElementById('go-level').textContent='Livello '+level+' / '+FINALE_LEVEL;
+}
+
+function restartGame(){
+  score=0;errors=0;level=1;gameOverFlag=false;totalDec=0;totalCorrect=0;totalApproved=0;
+  generateModularRules();manualPages=[];
+  document.getElementById('gameover').className='';
+  updateHUD();renderRules(false);nextPerson();
+}
+function goToMenu(){
+  document.getElementById('gameover').className='';
+  document.getElementById('main-menu').style.display='flex';
+}
+
+function startGame(mode){
+  gameMode=mode;score=0;errors=0;level=1;gameOverFlag=false;totalDec=0;totalCorrect=0;totalApproved=0;
+  generateModularRules();manualPages=[];
+  document.getElementById('main-menu').style.display='none';
+  document.getElementById('date-display').textContent=fmtDate(GAME_DATE);
+  if(mode==='sandbox')document.getElementById('rulebook').classList.add('sandbox-mode');
+  else document.getElementById('rulebook').classList.remove('sandbox-mode');
+  updateHUD();renderRules(false);nextPerson();
+}
+
+document.getElementById('menu-date-badge').textContent=fmtDate(GAME_DATE);
+document.getElementById('date-display').textContent=fmtDate(GAME_DATE);
+</script>
+</body>
+</html>

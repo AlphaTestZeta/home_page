@@ -139,7 +139,7 @@
             50%      { opacity: 0.50; }
         }
 
-        /* ---------------- JACKPOT OVERLAY (con etichetta SUPER) ---------------- */
+        /* ---------------- JACKPOT OVERLAY ---------------- */
         #jackpot-overlay {
             display: none;
             position: fixed;
@@ -828,6 +828,22 @@
             50%      { opacity: 1; }
         }
 
+        /* ---------------- CHEAT ZONES (invisibili, per tap mobile) ---------------- */
+        .cheat-zone {
+            position: fixed;
+            top: 0;
+            width: 100px;
+            height: 100px;
+            z-index: 99990;
+            background: transparent;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #cheat-zone-J { left: 0; }
+        #cheat-zone-K { right: 0; }
+
         /* ---------------- MEDIA QUERIES ---------------- */
         @media (max-width: 768px) {
             .container { padding: 25px 18px; }
@@ -848,6 +864,7 @@
             #jackpot-overlay .jackpot-label { font-size: 22vw; letter-spacing: 4px; }
             #jackpot-overlay .super-label   { font-size: 10vw; letter-spacing: 8px; text-indent: 8px; }
             .floating-win { font-size: 3rem; }
+            .cheat-zone { width: 80px; height: 80px; }
         }
 
         /* ---------------- LAG FREEZE ---------------- */
@@ -965,6 +982,10 @@
 
     <div class="jackpot-animation" id="jackpotAnimation"></div>
 
+    <!-- Zone invisibili per i cheat da tap mobile -->
+    <div class="cheat-zone" id="cheat-zone-J"></div>
+    <div class="cheat-zone" id="cheat-zone-K"></div>
+
     <div id="jackpot-overlay">
         <span class="super-label">SUPER</span>
         <span class="jackpot-label">JACKPOT</span>
@@ -1000,9 +1021,15 @@
             let credits = 500;
             let betAmount = 10;
             let isSpinning = false;
-            let cheatJackpot = false;        /* J → 💎💎💎 garantito */
-            let cheatJackpotNormal = false;  /* K → tris qualsiasi (non 💎) garantito */
             let displayedCredits = 500;
+
+            /* Cheat da tastiera (desktop) */
+            let cheatJackpot = false;        /* J → 💎💎💎 */
+            let cheatJackpotNormal = false;  /* K → tris non-diamante */
+
+            /* Cheat da tap mobile (indipendenti dai precedenti) */
+            let cheatDiamondArmed = false;   /* 3 tap angolo in alto a sinistra */
+            let cheatTrisArmed = false;      /* 3 tap angolo in alto a destra */
 
             document.addEventListener('keydown', e => {
                 if (e.key === 'j' || e.key === 'J') cheatJackpot = true;
@@ -1042,6 +1069,41 @@
             function getRandomNonDiamondSymbol() {
                 return weightedNonDiamond[Math.floor(Math.random() * weightedNonDiamond.length)];
             }
+
+            /* ============================================================
+               CHEAT ZONES — 3 tap in 1s per armare
+               ============================================================ */
+            function setupCheatZone(el, onArm) {
+                let taps = [];
+                const TAP_WINDOW_MS = 1000;
+                const TAPS_NEEDED = 3;
+
+                function registerTap(e) {
+                    if (e.cancelable) e.preventDefault();
+                    const now = Date.now();
+                    taps.push(now);
+                    taps = taps.filter(t => now - t < TAP_WINDOW_MS);
+
+                    if (taps.length >= TAPS_NEEDED) {
+                        taps = [];
+                        onArm();
+                    }
+                }
+
+                el.addEventListener('touchstart', registerTap, { passive: false });
+                el.addEventListener('mousedown', registerTap);
+            }
+
+            setupCheatZone(document.getElementById('cheat-zone-J'), () => {
+                /* Se l'altro è armato, rifiuta. Se questo è già armato, rifiuta. */
+                if (cheatTrisArmed || cheatDiamondArmed) return;
+                cheatDiamondArmed = true;
+            });
+
+            setupCheatZone(document.getElementById('cheat-zone-K'), () => {
+                if (cheatDiamondArmed || cheatTrisArmed) return;
+                cheatTrisArmed = true;
+            });
 
             /* ============================================================
                UI
@@ -1229,7 +1291,6 @@
                 const ATTRITO         = 1.15;
                 const DPR_MAX         = 1.5;
 
-                /* Lag SEMPRE attivo in questa versione (100%). */
                 const lagMode = true;
                 let lagFrozen       = false;
                 let lagFreezeUntil  = 0;
@@ -1394,7 +1455,7 @@
             }
 
             /* ============================================================
-               CONTROLLO VINCITE (nessun effetto: solo calcolo del tier)
+               CONTROLLO VINCITE
                ============================================================ */
             function checkWin(risultato) {
                 const [s1, s2, s3] = risultato;
@@ -1430,7 +1491,7 @@
             }
 
             /* ============================================================
-               SPIN DI UN SINGOLO RULLO (accetta un simbolo forzato)
+               SPIN DI UN SINGOLO RULLO
                ============================================================ */
             function spinReel(reel, duration, targetSymbol) {
                 return new Promise(resolve => {
@@ -1470,10 +1531,21 @@
                 rulloSound.currentTime = 0;
                 rulloSound.play();
 
-                /* --- Decidi se c'è un simbolo forzato (cheat J o K) --- */
+                /* --- Determina il simbolo forzato (priorità: 💎) --- */
                 let targetSymbol = null;
-                if (cheatJackpot) targetSymbol = '💎';
-                else if (cheatJackpotNormal) targetSymbol = getRandomNonDiamondSymbol();
+
+                const wantDiamond = cheatJackpot || cheatDiamondArmed;
+                const wantTris    = cheatJackpotNormal || cheatTrisArmed;
+
+                if (wantDiamond) {
+                    targetSymbol = '💎';
+                } else if (wantTris) {
+                    targetSymbol = getRandomNonDiamondSymbol();
+                }
+
+                /* --- Consuma i flag dei tap (si azzerano al primo spin) --- */
+                cheatDiamondArmed = false;
+                cheatTrisArmed = false;
 
                 const symbol1 = await spinReel(reel1, 1000, targetSymbol);
                 const symbol2 = await spinReel(reel2, 1500, targetSymbol);
@@ -1494,7 +1566,6 @@
                     pulseSpinButton();
 
                     if (result.tier === 'super') {
-                        /* --- SUPER JACKPOT: effetti XXL + lag garantito --- */
                         messageDisplay.classList.add('jackpot');
                         document.getElementById('jackpot-sound').play();
                         lanciaCoriandoliXXL();
@@ -1502,9 +1573,7 @@
                         rippleDisplay();
                         bounceSlot();
                         shake('hard');
-                        /* isSpinning resta true: lo sblocca il timeout di lanciaCoriandoliXXL */
                     } else if (result.tier === 'jackpot') {
-                        /* --- JACKPOT NORMALE: effetti classici --- */
                         messageDisplay.classList.add('jackpot');
                         document.getElementById('jackpot-normal-sound').play();
                         lanciaCoriandoliVecchio();
@@ -1512,9 +1581,7 @@
                         rippleDisplay();
                         bounceSlot();
                         shake('mid');
-                        /* isSpinning resta true: lo sblocca il timeout di lanciaCoriandoliVecchio */
                     } else {
-                        /* --- COPPIA --- */
                         messageDisplay.classList.add('win');
                         sparks(30);
                         shake('soft');

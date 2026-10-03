@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Pong — Seleziona Modalità</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    color: #fff;
+    min-height: 100%;
+    font-family: 'Press Start 2P', monospace;
+    overflow-x: hidden;
+  }
+
+  /* Canvas di sfondo: la classica partita di Pong che si gioca da sola */
+  #bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+  /* Overlay per scurire ulteriormente lo sfondo e far risaltare il contenuto */
+  .vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 50% 40%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.9) 100%);
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    gap: 40px;
+  }
+
+  h1 {
+    font-size: clamp(28px, 8vw, 64px);
+    letter-spacing: 6px;
+    margin: 0;
+    color: #fff;
+  }
+
+  .subtitle {
+    font-size: clamp(8px, 2.4vw, 12px);
+    color: #888;
+    letter-spacing: 2px;
+    margin-top: -20px;
+  }
+
+  .menu {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    width: 100%;
+    max-width: 560px;
+  }
+
+  /* Riquadro cliccabile in stile arcade */
+  .card {
+    display: block;
+    text-decoration: none;
+    color: #fff;
+    border: 3px solid #fff;
+    padding: 22px 18px;
+    background: rgba(0, 0, 0, 0.6);
+    position: relative;
+    transition: transform 0.12s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+    cursor: pointer;
+  }
+
+  .card .label {
+    font-size: clamp(10px, 2.6vw, 14px);
+    line-height: 1.6;
+    letter-spacing: 1px;
+  }
+
+  .card .tag {
+    display: block;
+    font-size: clamp(7px, 1.8vw, 9px);
+    color: #888;
+    margin-top: 12px;
+    letter-spacing: 1px;
+    transition: color 0.18s ease;
+  }
+
+  /* Frecce che appaiono all'hover / focus */
+  .card::before,
+  .card::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 14px;
+    height: 3px;
+    background: currentColor;
+    opacity: 0;
+    transform: translateY(-50%);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+  .card::before { left: -22px; }
+  .card::after  { right: -22px; }
+
+  .card:hover,
+  .card:focus-visible {
+    outline: none;
+    transform: translateY(-2px);
+  }
+  .card:hover::before,
+  .card:hover::after,
+  .card:focus-visible::before,
+  .card:focus-visible::after {
+    opacity: 1;
+  }
+  .card:hover::before, .card:focus-visible::before { transform: translateY(-50%) translateX(4px); }
+  .card:hover::after,  .card:focus-visible::after  { transform: translateY(-50%) translateX(-4px); }
+
+  /* ------------------------------------------------------------------
+     COLORI PER MODALITÀ
+     Ogni card ha un colore-bordo. All'hover il riempimento diventa
+     quello stesso colore ma leggermente più scuro, con testo nero.
+     ------------------------------------------------------------------ */
+
+  /* --- v1: azzurro --- */
+  .card.v1 { border-color: #7fd4ff; }
+  .card.v1:hover,
+  .card.v1:focus-visible {
+    background: #5aa9cf;      /* #7fd4ff leggermente più scuro */
+    border-color: #5aa9cf;
+    color: #002233;
+  }
+  .card.v1:hover .tag,
+  .card.v1:focus-visible .tag { color: #003a55; }
+
+  /* --- v2: giallo --- */
+  .card.v2 { border-color: #ffd166; }
+  .card.v2:hover,
+  .card.v2:focus-visible {
+    background: #cfa63f;      /* #ffd166 leggermente più scuro */
+    border-color: #cfa63f;
+    color: #332200;
+  }
+  .card.v2:hover .tag,
+  .card.v2:focus-visible .tag { color: #4a3500; }
+
+  /* --- v3: arancione --- */
+  .card.v3 { border-color: #ff9e7f; }
+  .card.v3:hover,
+  .card.v3:focus-visible {
+    background: #cf7a5e;      /* #ff9e7f leggermente più scuro */
+    border-color: #cf7a5e;
+    color: #330f00;
+  }
+  .card.v3:hover .tag,
+  .card.v3:focus-visible .tag { color: #4a1a05; }
+
+  .footer {
+    position: relative;
+    z-index: 2;
+    font-size: 8px;
+    color: #444;
+    letter-spacing: 2px;
+    padding-bottom: 24px;
+    text-align: center;
+  }
+
+  @media (max-width: 420px) {
+    .card { padding: 18px 12px; }
+    .wrap { gap: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sfondo animato: partita di Pong che si gioca da sola -->
+<canvas id="bg"></canvas>
+<div class="vignette"></div>
+
+<main class="wrap">
+  <header>
+    <h1>PONG</h1>
+    <p class="subtitle">SELEZIONA UNA MODALITÀ</p>
+  </header>
+
+  <nav class="menu">
+
+    <!-- ============================================================
+         PLACEHOLDER 1 — VECCHIA VERSIONE 1 vs BOT
+         Sostituisci href="#" con il link alla pagina della vecchia versione.
+         ============================================================ -->
+    <a class="card v1" href="#">
+      <span class="label">1 vs BOT — CLASSICA</span>
+      <span class="tag">VERSIONE ORIGINALE</span>
+    </a>
+
+    <!-- ============================================================
+         PLACEHOLDER 2 — NUOVA VERSIONE 1 vs BOT (TURBO)
+         Sostituisci href="#" con il link alla nuova versione (momentum + cap).
+         ============================================================ -->
+    <a class="card v2" href="#">
+      <span class="label">1 vs BOT — TURBO</span>
+      <span class="tag">CON MOMENTUM</span>
+    </a>
+
+    <!-- ============================================================
+         PLACEHOLDER 3 — VERSIONE 1 vs 1
+         Sostituisci href="#" con il link alla versione per due giocatori.
+         ============================================================ -->
+    <a class="card v3" href="#">
+      <span class="label">1 vs 1 — DUE GIOCATORI</span>
+      <span class="tag">SFIDA LOCALE</span>
+    </a>
+
+  </nav>
+</main>
+
+<footer class="footer">© PONG</footer>
+
+<script>
+// ------------------------------------------------------------------
+// Sfondo animato: una partita di Pong che si gioca da sola,
+// puramente decorativa (nessuna interazione).
+// ------------------------------------------------------------------
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
+
+let W = 0, H = 0;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+const BALL_SIZE = 14;
+const PADDLE_W  = 14;
+const PADDLE_H  = 100;
+const BALL_SPEED = 5;
+
+let ball = { x: W/2, y: H/2, dx: BALL_SPEED, dy: BALL_SPEED * 0.6 };
+let left  = { x: 40,               y: H/2 - PADDLE_H/2 };
+let right = { x: W - 40 - PADDLE_W, y: H/2 - PADDLE_H/2 };
+
+function resetBgBall() {
+  ball.x = W/2;
+  ball.y = H/2;
+  ball.dx = (Math.random() < 0.5 ? -1 : 1) * BALL_SPEED;
+  ball.dy = (Math.random() * 2 - 1) * BALL_SPEED * 0.7;
+}
+
+// Il bot dello sfondo insegue la palla in modo imperfetto (per estetica)
+function follow(paddle, targetY, speed) {
+  const center = paddle.y + PADDLE_H / 2;
+  const diff = targetY - center;
+  if (Math.abs(diff) > 4) {
+    paddle.y += Math.sign(diff) * Math.min(speed, Math.abs(diff));
+  }
+}
+
+function updateBg() {
+  ball.x += ball.dx;
+  ball.y += ball.dy;
+
+  if (ball.y <= 0 || ball.y + BALL_SIZE >= H) {
+    ball.dy *= -1;
+    ball.y = Math.max(0, Math.min(H - BALL_SIZE, ball.y));
+  }
+
+  // Collisione asta sinistra
+  if (ball.dx < 0 &&
+      ball.x <= left.x + PADDLE_W &&
+      ball.x >= left.x &&
+      ball.y + BALL_SIZE >= left.y &&
+      ball.y <= left.y + PADDLE_H) {
+    ball.dx = Math.abs(ball.dx);
+    ball.x = left.x + PADDLE_W;
+  }
+
+  // Collisione asta destra
+  if (ball.dx > 0 &&
+      ball.x + BALL_SIZE >= right.x &&
+      ball.x + BALL_SIZE <= right.x + PADDLE_W &&
+      ball.y + BALL_SIZE >= right.y &&
+      ball.y <= right.y + PADDLE_H) {
+    ball.dx = -Math.abs(ball.dx);
+    ball.x = right.x - BALL_SIZE;
+  }
+
+  // Punto (rimette in gioco)
+  if (ball.x < -BALL_SIZE || ball.x > W + BALL_SIZE) {
+    resetBgBall();
+  }
+
+  // Le aste inseguono la palla con un po' di ritardo, per un effetto naturale
+  follow(left,  ball.y + BALL_SIZE/2, 5.5);
+  follow(right, ball.y + BALL_SIZE/2, 5.0);
+
+  left.y  = Math.max(0, Math.min(H - PADDLE_H, left.y));
+  right.y = Math.max(0, Math.min(H - PADDLE_H, right.y));
+}
+
+function drawBg() {
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.fillStyle = '#fff';
+
+  // Linea centrale tratteggiata
+  ctx.setLineDash([12, 14]);
+  ctx.beginPath();
+  ctx.moveTo(W/2, 0);
+  ctx.lineTo(W/2, H);
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Aste
+  ctx.fillRect(left.x,  left.y,  PADDLE_W, PADDLE_H);
+  ctx.fillRect(right.x, right.y, PADDLE_W, PADDLE_H);
+
+  // Palla
+  ctx.fillRect(ball.x, ball.y, BALL_SIZE, BALL_SIZE);
+}
+
+function loop() {
+  updateBg();
+  drawBg();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+
+</body>
+</html>

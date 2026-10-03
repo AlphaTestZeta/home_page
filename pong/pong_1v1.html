@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Pong — 2 Giocatori</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    overflow: hidden;
+    height: 100%;
+    touch-action: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  canvas {
+    display: block;
+    background: #000;
+  }
+</style>
+</head>
+<body>
+<canvas id="game" width="800" height="500"></canvas>
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const W = canvas.width;
+const H = canvas.height;
+
+// Scala il canvas (via CSS) per riempire lo schermo mantenendo l'aspect ratio originale
+function resizeCanvas() {
+  const scale = Math.min(window.innerWidth / W, window.innerHeight / H);
+  canvas.style.width = (W * scale) + 'px';
+  canvas.style.height = (H * scale) + 'px';
+}
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', resizeCanvas);
+resizeCanvas();
+
+const PADDLE_W = 12;
+const PADDLE_H = 90;
+const PADDLE_SPEED = 6;
+const BALL_SIZE = 12;
+const BALL_SPEED = 3.8;
+
+// ------------------------------------------------------------------
+// REGOLE DI VELOCITÀ
+// La pallina accelera ogni SPEEDUP_EVERY rimbalzi sulle aste, ma la
+// sua velocità NON può superare MAX_BALL_SPEED.
+// ------------------------------------------------------------------
+const SPEEDUP_EVERY = 2;
+const SPEEDUP_FACTOR = 1.1;
+const MAX_BALL_SPEED = 9.0;
+
+const DEFLECT_CHANCE = 0.1;
+const DEFLECT_ANGLE = 20 * Math.PI / 180;
+// Alzato a 45° per dare spazio al momentum dell'asta senza permettere
+// traiettorie troppo verticali (anti-stallo).
+const MAX_BALL_ANGLE = 45 * Math.PI / 180;
+
+// ------------------------------------------------------------------
+// MOMENTUM DELL'ASTA
+// Coefficiente di trasferimento: quanto della velocità verticale
+// dell'asta viene trasferito alla pallina al momento del rimbalzo.
+// ------------------------------------------------------------------
+const PADDLE_MOMENTUM_TRANSFER = 0.7;
+// Massima velocità verticale dell'asta considerata per il momentum
+const MAX_PADDLE_VY = PADDLE_SPEED * 2;
+
+let paddleBounceCount = 0;
+let speedupLevel = 0;
+
+let leftScore = 0;
+let rightScore = 0;
+
+const leftPaddle  = { x: 30,               y: H/2 - PADDLE_H/2 };
+const rightPaddle = { x: W - 30 - PADDLE_W, y: H/2 - PADDLE_H/2 };
+
+// Velocità verticale delle aste (px/frame), aggiornata ogni frame
+let leftPaddleVy = 0;
+let rightPaddleVy = 0;
+
+function resetBall() {
+  const angle = (Math.random() * 0.6 - 0.3);
+  const dir = Math.random() < 0.5 ? -1 : 1;
+  return {
+    x: W/2 - BALL_SIZE/2,
+    y: H/2 - BALL_SIZE/2,
+    dx: dir * BALL_SPEED * Math.cos(angle),
+    dy: BALL_SPEED * Math.sin(angle)
+  };
+}
+
+let ball = resetBall();
+let paused = false;
+let started = false;
+
+function clampBallAngle() {
+  const speed = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+  const maxDy = Math.abs(ball.dx) * Math.tan(MAX_BALL_ANGLE);
+  if (Math.abs(ball.dy) > maxDy) {
+    const signDy = ball.dy < 0 ? -1 : 1;
+    const signDx = ball.dx < 0 ? -1 : 1;
+    ball.dy = signDy * maxDy;
+    ball.dx = signDx * Math.sqrt(Math.max(0, speed * speed - ball.dy * ball.dy));
+  }
+}
+
+// --- Audio (Web Audio API) ---
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+function playTone(freq, duration) {
+  if (!audioCtx) return;
+  if (audioCtx.state !== 'running') {
+    audioCtx.resume().then(() => playTone(freq, duration));
+    return;
+  }
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = freq;
+  const now = audioCtx.currentTime;
+  gain.gain.setValueAtTime(0.15, now);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  osc.stop(now + duration);
+}
+function playBounce() { playTone(440, 0.08); }
+function playScore()  { playTone(180, 0.25); }
+
+// ------------------------------------------------------------------
+// INPUT DA TASTIERA
+//   Giocatore 1 (asta sinistra): W / S
+//   Giocatore 2 (asta destra):   Freccia SU / Freccia GIÙ
+// ------------------------------------------------------------------
+const keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === ' ') {
+    e.preventDefault();
+  }
+});
+document.addEventListener('keyup', e => keys[e.key] = false);
+
+// ------------------------------------------------------------------
+// INPUT TOUCH (2 giocatori)
+// Ogni dito muove l'asta della metà schermo in cui appoggia.
+// ------------------------------------------------------------------
+const activeTouches = {};
+let touchDeltaLeft = 0;
+let touchDeltaRight = 0;
+
+function handleTouchStart(e) {
+  ensureAudio();
+  const rect = canvas.getBoundingClientRect();
+  for (const t of e.changedTouches) {
+    const relX = (t.clientX - rect.left) / rect.width;
+    const player = relX < 0.5 ? 'left' : 'right';
+    activeTouches[t.identifier] = { player, lastY: t.clientY };
+  }
+}
+
+function handleTouchMove(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scale = H / rect.height;
+  for (const t of e.changedTouches) {
+    const info = activeTouches[t.identifier];
+    if (!info) continue;
+    const delta = (t.clientY - info.lastY) * scale;
+    info.lastY = t.clientY;
+    if (info.player === 'left') touchDeltaLeft += delta;
+    else                         touchDeltaRight += delta;
+  }
+}
+
+function handleTouchEnd(e) {
+  for (const t of e.changedTouches) {
+    delete activeTouches[t.identifier];
+  }
+}
+
+canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
+canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
+canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+canvas.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+function update() {
+  if (!started || paused) {
+    leftPaddleVy = 0;
+    rightPaddleVy = 0;
+    return;
+  }
+
+  // Memorizza la posizione iniziale per calcolare la velocità dell'asta
+  const oldLeftY  = leftPaddle.y;
+  const oldRightY = rightPaddle.y;
+
+  // --- Asta sinistra: Giocatore 1 (W/S + touch metà sinistra) ---
+  if (keys['w'] || keys['W']) leftPaddle.y -= PADDLE_SPEED;
+  if (keys['s'] || keys['S']) leftPaddle.y += PADDLE_SPEED;
+  if (touchDeltaLeft !== 0) {
+    leftPaddle.y += touchDeltaLeft;
+    touchDeltaLeft = 0;
+  }
+  leftPaddle.y = Math.max(0, Math.min(H - PADDLE_H, leftPaddle.y));
+
+  // --- Asta destra: Giocatore 2 (frecce + touch metà destra) ---
+  if (keys['ArrowUp'])   rightPaddle.y -= PADDLE_SPEED;
+  if (keys['ArrowDown']) rightPaddle.y += PADDLE_SPEED;
+  if (touchDeltaRight !== 0) {
+    rightPaddle.y += touchDeltaRight;
+    touchDeltaRight = 0;
+  }
+  rightPaddle.y = Math.max(0, Math.min(H - PADDLE_H, rightPaddle.y));
+
+  // Calcola la velocità verticale effettiva delle aste (px/frame)
+  leftPaddleVy  = Math.max(-MAX_PADDLE_VY, Math.min(MAX_PADDLE_VY, leftPaddle.y  - oldLeftY));
+  rightPaddleVy = Math.max(-MAX_PADDLE_VY, Math.min(MAX_PADDLE_VY, rightPaddle.y - oldRightY));
+
+  // --- Movimento palla ---
+  ball.x += ball.dx;
+  ball.y += ball.dy;
+
+  // Rimbalzo sopra/sotto
+  if (ball.y <= 0 || ball.y + BALL_SIZE >= H) {
+    ball.dy *= -1;
+    if (ball.y < 0) ball.y = 0;
+    if (ball.y + BALL_SIZE > H) ball.y = H - BALL_SIZE;
+    playBounce();
+  }
+
+  // Collisione asta sinistra
+  if (ball.dx < 0 &&
+      ball.x <= leftPaddle.x + PADDLE_W &&
+      ball.x >= leftPaddle.x &&
+      ball.y + BALL_SIZE >= leftPaddle.y &&
+      ball.y <= leftPaddle.y + PADDLE_H) {
+    ball.dx = Math.abs(ball.dx);
+    ball.x = leftPaddle.x + PADDLE_W;
+    playBounce();
+    registerPaddleBounce();
+    applyPaddleMomentum(leftPaddleVy);
+  }
+
+  // Collisione asta destra
+  if (ball.dx > 0 &&
+      ball.x + BALL_SIZE >= rightPaddle.x &&
+      ball.x + BALL_SIZE <= rightPaddle.x + PADDLE_W &&
+      ball.y + BALL_SIZE >= rightPaddle.y &&
+      ball.y <= rightPaddle.y + PADDLE_H) {
+    ball.dx = -Math.abs(ball.dx);
+    ball.x = rightPaddle.x - BALL_SIZE;
+    playBounce();
+    registerPaddleBounce();
+    applyPaddleMomentum(rightPaddleVy);
+  }
+
+  // Punto
+  if (ball.x + BALL_SIZE < 0) {
+    rightScore++;
+    playScore();
+    scorePause();
+  } else if (ball.x > W) {
+    leftScore++;
+    playScore();
+    scorePause();
+  }
+}
+
+// ------------------------------------------------------------------
+// MOMENTUM DELL'ASTA
+// paddleVy > 0: asta in movimento verso il basso -> pallina spinta giù
+// paddleVy < 0: asta in movimento verso l'alto  -> pallina spinta su
+// ------------------------------------------------------------------
+function applyPaddleMomentum(paddleVy) {
+  ball.dy += paddleVy * PADDLE_MOMENTUM_TRANSFER;
+
+  // Mantiene l'angolo entro MAX_BALL_ANGLE (preserva la velocità totale)
+  clampBallAngle();
+
+  // Rispetta il tetto di velocità: la spinta dell'asta non può
+  // portare la pallina oltre MAX_BALL_SPEED.
+  const speed = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+  if (speed > MAX_BALL_SPEED) {
+    const scale = MAX_BALL_SPEED / speed;
+    ball.dx *= scale;
+    ball.dy *= scale;
+  }
+}
+
+function scorePause() {
+  paused = true;
+  ball.x = -9999;
+  speedupLevel = 0;
+  paddleBounceCount = 0;
+  leftPaddleVy = 0;
+  rightPaddleVy = 0;
+  setTimeout(() => {
+    ball = resetBall();
+    paused = false;
+  }, 1000);
+}
+
+function registerPaddleBounce() {
+  // Deviazione casuale anti-stallo
+  if (Math.random() < DEFLECT_CHANCE) {
+    const sign = Math.random() < 0.5 ? 1 : -1;
+    const speed = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+    const currentAngle = Math.atan2(ball.dy, ball.dx);
+    const newAngle = currentAngle + sign * DEFLECT_ANGLE;
+    ball.dx = speed * Math.cos(newAngle);
+    ball.dy = speed * Math.sin(newAngle);
+  }
+
+  clampBallAngle();
+
+  paddleBounceCount++;
+  if (paddleBounceCount % SPEEDUP_EVERY === 0) {
+    const speed = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+    if (speed < MAX_BALL_SPEED - 0.001) {
+      const factor = Math.min(SPEEDUP_FACTOR, MAX_BALL_SPEED / speed);
+      ball.dx *= factor;
+      ball.dy *= factor;
+      speedupLevel++;
+    }
+  }
+}
+
+function draw() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = '#fff';
+
+  // Linea centrale tratteggiata
+  ctx.setLineDash([10, 10]);
+  ctx.beginPath();
+  ctx.moveTo(W/2, 0);
+  ctx.lineTo(W/2, H);
+  ctx.strokeStyle = '#fff';
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Paddle
+  ctx.fillRect(leftPaddle.x, leftPaddle.y, PADDLE_W, PADDLE_H);
+  ctx.fillRect(rightPaddle.x, rightPaddle.y, PADDLE_W, PADDLE_H);
+
+  // Palla
+  if (started && !paused) {
+    ctx.fillRect(ball.x, ball.y, BALL_SIZE, BALL_SIZE);
+  }
+
+  // Punteggi
+  ctx.font = '40px "Press Start 2P", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff';
+  ctx.fillText(leftScore, W/2 - 80, 60);
+  ctx.fillText(rightScore, W/2 + 80, 60);
+
+  // Schermata di avvio (solo il messaggio originale)
+  if (!started) {
+    ctx.font = '16px "Press Start 2P", monospace';
+    ctx.fillStyle = '#fff';
+    ctx.fillText('TOCCA O PREMI UN TASTO', W/2, H/2 + 90);
+    ctx.fillText('PER INIZIARE', W/2, H/2 + 120);
+  }
+}
+
+function startGame() {
+  if (started) return;
+  started = true;
+  ensureAudio();
+  playBounce();
+  ball = resetBall();
+}
+
+document.addEventListener('keydown', startGame, { once: true });
+document.addEventListener('mousedown', startGame, { once: true });
+canvas.addEventListener('touchstart', startGame, { once: true });
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+</body>
+</html>

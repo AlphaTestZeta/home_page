@@ -18,12 +18,16 @@
     --download: #8fbf8f;
     --muted: #9a998f;
   }
+
   body {
     font-family: 'DM Sans', sans-serif;
     background: var(--cement);
     color: var(--ink);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
+
+  img { -webkit-user-drag: none; }
 
   /* ---------- HEADER ---------- */
 
@@ -38,18 +42,20 @@
     );
     border-bottom: 4px solid var(--ink);
   }
+
   header {
     background: var(--paper);
-    padding: 40px 24px 46px;
+    padding: 42px 24px 48px;
     border-bottom: 4px solid var(--ink);
   }
 
   h1 {
     font-family: 'Permanent Marker', cursive;
-    font-size: clamp(1.9rem, 6vw, 3.6rem);
+    font-size: clamp(1.7rem, 5.6vw, 3.3rem);
     text-align: center;
     letter-spacing: 1px;
-    line-height: 1.1;
+    line-height: 1.15;
+    text-transform: uppercase;
   }
 
   .subtitle {
@@ -62,34 +68,30 @@
 
   /* ---------- SECTIONS ---------- */
 
-  main {
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 50px 24px 80px;
-  }
+  main { padding: 52px 0 80px; }
 
-  .section {
-    margin-bottom: 64px;
-  }
+  .section { margin-bottom: 62px; }
 
   .section-head {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 30px;
+    gap: 12px;
+    margin: 0 auto 28px;
+    padding: 0 24px;
+    max-width: 1168px;
   }
 
   .slash {
     font-family: 'Permanent Marker', cursive;
-    font-size: 1.8rem;
-    color: var(--ink);
-    transform: skewX(-12deg);
+    font-size: 1.9rem;
     line-height: 1;
+    transform: skewX(-14deg) translateY(-2px);
   }
 
   .section-title {
-    font-family: 'Permanent Marker', cursive;
-    font-size: 1.5rem;
+    font-size: 1.42rem;
+    font-weight: 700;
+    letter-spacing: 0.2px;
     white-space: nowrap;
   }
 
@@ -99,153 +101,175 @@
     background: var(--ink);
   }
 
-  .grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 26px;
+  /* ---------- CAROUSEL ---------- */
+
+  .carousel-wrap {
+    max-width: 1168px;
+    margin: 0 auto;
+    padding: 0 24px;
   }
 
-  /* ---------- FOLDER CARDS ---------- */
+  .carousel {
+    display: flex;
+    gap: 28px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    padding: 26px 6px 28px;
+    cursor: grab;
+    user-select: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ink) transparent;
+  }
+
+  .carousel.dragging { cursor: grabbing; scroll-snap-type: none; }
+
+  .carousel::-webkit-scrollbar { height: 8px; }
+  .carousel::-webkit-scrollbar-track { background: transparent; }
+  .carousel::-webkit-scrollbar-thumb { background: var(--ink); border-radius: 0; }
+
+  /* ---------- FOLDER CARD ---------- */
 
   .card {
     --accent: var(--giochi);
-    position: relative;
-    width: 300px;
-    background: var(--paper);
-    border: 3px solid var(--ink);
-    box-shadow: 7px 7px 0 var(--ink);
+    flex: 0 0 auto;
+    width: 224px;
+    scroll-snap-align: start;
     text-decoration: none;
     color: inherit;
-    display: flex;
-    flex-direction: column;
-    clip-path: polygon(0 0, calc(100% - 46px) 0, 100% 46px, 100% 100%, 0 100%);
-    transition: transform 0.18s ease, box-shadow 0.18s ease;
-  }
-  .card:nth-child(2n) { transform: rotate(-0.6deg); }
-  .card:nth-child(3n) { transform: rotate(0.6deg); }
-
-  a.card:hover {
-    transform: translate(-4px, -4px) rotate(0deg);
-    box-shadow: 11px 11px 0 var(--ink);
+    display: block;
+    outline: none;
   }
 
-  .card-fold {
+  .folder-unit {
+    position: relative;
+    padding-top: 56px;      /* spazio per il foglio che sbuca */
+  }
+
+  /* il foglio con l'immagine: parte dietro la cartella e sbuca in alto */
+  .paper {
     position: absolute;
-    top: 0;
-    right: 0;
-    width: 46px;
-    height: 46px;
-    background: var(--cement);
-    border-left: 3px solid var(--ink);
-    border-bottom: 3px solid var(--ink);
-    clip-path: polygon(0 0, 100% 0, 100% 100%);
-  }
-
-  .card-img-wrap {
-    width: 100%;
-    height: 160px;
-    background: var(--accent);
+    top: 16px;
+    left: 78px;
+    right: 12px;
+    height: 132px;
+    background: #fdfcf8;
+    border: 3px solid var(--ink);
     overflow: hidden;
-    border-bottom: 3px solid var(--ink);
+    z-index: 1;
+    transition: transform 0.34s cubic-bezier(0.22, 0.8, 0.25, 1);
   }
 
-  .card-img-wrap img {
+  .paper img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    mix-blend-mode: multiply;
+    pointer-events: none;
   }
 
-  .card-body {
-    padding: 20px 22px 24px;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
+  /* il pannello frontale della cartella */
+  .folder {
+    position: relative;
+    z-index: 2;
+    background: var(--accent);
+    border: 3px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--ink);
+    min-height: 118px;
+    transition: box-shadow 0.22s ease;
   }
+
+  /* la linguetta (tab) dietro/al bordo superiore sinistro */
+  .tab {
+    position: absolute;
+    top: -24px;
+    left: 12px;
+    width: 58px;
+    height: 24px;
+    background: var(--ink);
+    clip-path: polygon(0 100%, 16% 0, 84% 0, 100% 100%);
+    z-index: 3;
+  }
+
+  .tab::after {
+    content: "";
+    position: absolute;
+    inset: 3px 4px 0 4px;
+    background: var(--accent);
+    clip-path: polygon(0 100%, 18% 0, 82% 0, 100% 100%);
+  }
+
+  /* hover: il foglio esce di più + ombra che si allunga */
+  a.card:hover .paper,
+  a.card:focus-visible .paper { transform: translateY(-30px); }
+
+  a.card:hover .folder,
+  a.card:focus-visible .folder { box-shadow: 9px 9px 0 var(--ink); }
+
+  .folder-info { padding: 14px 15px 18px; }
 
   .card-tag {
     display: inline-block;
-    align-self: flex-start;
-    font-size: 0.7rem;
+    font-size: 0.62rem;
     font-weight: 700;
-    letter-spacing: 1.5px;
+    letter-spacing: 1.4px;
     text-transform: uppercase;
-    background: var(--accent);
+    background: var(--paper);
     border: 2px solid var(--ink);
-    padding: 2px 9px;
-    margin-bottom: 12px;
+    padding: 2px 7px;
+    margin-bottom: 8px;
   }
 
   .card-title {
-    font-family: 'Permanent Marker', cursive;
-    font-size: 1.25rem;
-    margin-bottom: 8px;
-    line-height: 1.2;
-  }
-  .card-desc {
-    font-size: 0.9rem;
-    color: #55544c;
-    line-height: 1.55;
-    margin-bottom: 18px;
-    flex: 1;
-  }
-
-  .card-btn {
-    display: inline-block;
-    align-self: flex-start;
-    padding: 8px 18px;
-    background: var(--ink);
-    color: var(--paper);
-    font-size: 0.85rem;
+    font-size: 1rem;
     font-weight: 700;
-    border: 2px solid var(--ink);
+    line-height: 1.25;
+    margin-bottom: 5px;
   }
 
-  a.card:hover .card-btn {
-    background: var(--accent);
-    color: var(--ink);
+  .card-desc {
+    font-size: 0.8rem;
+    color: #3a3a34;
+    line-height: 1.45;
   }
 
-  /* placeholder / "in arrivo" cards */
-  .card.placeholder {
+  /* ---------- CARD "IN ARRIVO" ---------- */
+
+  .card.placeholder .paper {
     background: repeating-linear-gradient(
       -45deg,
-      var(--paper),
-      var(--paper) 10px,
-      #eceae3 10px,
-      #eceae3 20px
+      #fdfcf8 0 8px,
+      #ece9df 8px 16px
     );
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 7px;
   }
 
-  .card.placeholder .card-img-wrap {
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
   .stamp {
     font-family: 'Permanent Marker', cursive;
-    font-size: 1rem;
+    font-size: 0.72rem;
     color: var(--muted);
     border: 3px solid var(--muted);
-    padding: 6px 16px;
+    padding: 3px 9px;
     transform: rotate(-8deg);
     letter-spacing: 1px;
+    background: var(--paper);
+    white-space: nowrap;
   }
 
-  .card.placeholder .card-btn {
-    background: transparent;
-    color: var(--muted);
-    border: 2px dashed var(--muted);
-  }
+  /* ---------- ACCENTI PER CATEGORIA ---------- */
 
-  /* category accents */
-  .cat-giochi .card { --accent: var(--giochi); }
-  .cat-collegamenti .card { --accent: var(--collegamenti); }
-  .cat-download .card { --accent: var(--download); }
+  .cat-giochi .card      { --accent: var(--giochi); }
+  .cat-collegamenti .card{ --accent: var(--collegamenti); }
+  .cat-download .card    { --accent: var(--download); }
+
   @media (max-width: 480px) {
-    .card { width: 100%; }
+    .card { width: 196px; }
+    .paper { left: 68px; height: 122px; }
+    .section-title { font-size: 1.2rem; }
   }
 </style>
 </head>
@@ -268,65 +292,83 @@
         <div class="rule"></div>
       </div>
 
-      <div class="grid">
+      <div class="carousel-wrap">
+        <div class="carousel">
 
-        <a class="card" href="pagina1.html">
-          <div class="card-fold"></div>
-          <div class="card-img-wrap"><img src="SlotMachine.jpg" alt="Freaky Slot Machine"></div>
-          <div class="card-body">
-            <span class="card-tag">Gioco 01</span>
-            <h3 class="card-title">"Freaky" Slot Machine</h3>
-            <p class="card-desc">Absolute cano freaky machine!!!</p>
-            <span class="card-btn">Vai →</span>
-          </div>
-        </a>
+          <a class="card" href="pagina1.html">
+            <div class="folder-unit">
+              <div class="paper"><img src="SlotMachine.jpg" alt="Freaky Slot Machine"></div>
+              <div class="folder">
+                <div class="tab"></div>
+                <div class="folder-info">
+                  <span class="card-tag">Gioco 01</span>
+                  <h3 class="card-title">"Freaky" Slot Machine</h3>
+                  <p class="card-desc">Absolute cano freaky machine!!!</p>
+                </div>
+              </div>
+            </div>
+          </a>
 
-        <a class="card" href="pagina2.html">
-          <div class="card-fold"></div>
-          <div class="card-img-wrap"><img src="love.jpeg" alt="Free gift"></div>
-          <div class="card-body">
-            <span class="card-tag">Gioco 02</span>
-            <h3 class="card-title">Free gift</h3>
-            <p class="card-desc">Piccolo dono per chi visita il sito :3</p>
-            <span class="card-btn">Vai →</span>
-          </div>
-        </a>
+          <a class="card" href="pagina2.html">
+            <div class="folder-unit">
+              <div class="paper"><img src="love.jpeg" alt="Free gift"></div>
+              <div class="folder">
+                <div class="tab"></div>
+                <div class="folder-info">
+                  <span class="card-tag">Gioco 02</span>
+                  <h3 class="card-title">Free gift</h3>
+                  <p class="card-desc">Piccolo dono per chi visita il sito :3</p>
+                </div>
+              </div>
+            </div>
+          </a>
 
-        <a class="card" href="pagina3.html">
-          <div class="card-fold"></div>
-          <div class="card-img-wrap"><img src="GrattaEVinci.jpeg" alt="Gratta e Stravinci"></div>
-          <div class="card-body">
-            <span class="card-tag">Gioco 03</span>
-            <h3 class="card-title">Gratta e Stravinci</h3>
-            <p class="card-desc">Let's go gambling!!!</p>
-            <span class="card-btn">Vai →</span>
-          </div>
-        </a>
+          <a class="card" href="pagina3.html">
+            <div class="folder-unit">
+              <div class="paper"><img src="GrattaEVinci.jpeg" alt="Gratta e Stravinci"></div>
+              <div class="folder">
+                <div class="tab"></div>
+                <div class="folder-info">
+                  <span class="card-tag">Gioco 03</span>
+                  <h3 class="card-title">Gratta e Stravinci</h3>
+                  <p class="card-desc">Let's go gambling!!!</p>
+                </div>
+              </div>
+            </div>
+          </a>
 
-        <a class="card" href="pagina4.html">
-          <div class="card-fold"></div>
-          <div class="card-img-wrap"><img src="https://images.g2a.com/360x600/1x1x1/papers-please-steam-cle-global-i10000000400006/591282ecae653aef7134beb6" alt="Controllo di frontiera"></div>
-          <div class="card-body">
-            <span class="card-tag">Gioco 04</span>
-            <h3 class="card-title">Controllo di frontiera</h3>
-            <p class="card-desc">Paper Please ma tarocco ig…</p>
-            <span class="card-btn">Vai →</span>
-          </div>
-        </a>
+          <a class="card" href="pagina4.html">
+            <div class="folder-unit">
+              <div class="paper"><img src="https://images.g2a.com/360x600/1x1x1/papers-please-steam-cle-global-i10000000400006/591282ecae653aef7134beb6" alt="Controllo di frontiera"></div>
+              <div class="folder">
+                <div class="tab"></div>
+                <div class="folder-info">
+                  <span class="card-tag">Gioco 04</span>
+                  <h3 class="card-title">Controllo di frontiera</h3>
+                  <p class="card-desc">Paper Please ma tarocco ig…</p>
+                </div>
+              </div>
+            </div>
+          </a>
 
-        <a class="card" href="sudoku/index.html">
-          <div class="card-fold"></div>
-          <div class="card-img-wrap"><img src="Sudoku.png" alt="Sudoku"></div>
-          <div class="card-body">
-            <span class="card-tag">Gioco 05</span>
-            <h3 class="card-title">Sudoku</h3>
-            <p class="card-desc">Il giuoco del Sudoku</p>
-            <span class="card-btn">Vai →</span>
-          </div>
-        </a>
+          <a class="card" href="sudoku/index.html">
+            <div class="folder-unit">
+              <div class="paper"><img src="Sudoku.png" alt="Sudoku"></div>
+              <div class="folder">
+                <div class="tab"></div>
+                <div class="folder-info">
+                  <span class="card-tag">Gioco 05</span>
+                  <h3 class="card-title">Sudoku</h3>
+                  <p class="card-desc">Il giuoco del Sudoku</p>
+                </div>
+              </div>
+            </div>
+          </a>
 
+        </div>
       </div>
     </section>
+
     <!-- ================= COLLEGAMENTI ================= -->
     <section class="section cat-collegamenti">
       <div class="section-head">
@@ -335,20 +377,24 @@
         <div class="rule"></div>
       </div>
 
-      <div class="grid">
+      <div class="carousel-wrap">
+        <div class="carousel">
 
-        <!-- MODIFICA QUI: sostituisci href, immagine e testo con il tuo link esterno -->
-        <a class="card" href="https://alphatestzeta.github.io/Pong/" target="_blank" rel="noopener">
-          <div class="card-fold"></div>
-          <div class="card-img-wrap"><img src="Pong.png" alt="Pong"></div>
-          <div class="card-body">
-            <span class="card-tag">Link 01</span>
-            <h3 class="card-title">Pong</h3>
-            <p class="card-desc">The good old classic.</p>
-            <span class="card-btn">Vai →</span>
-          </div>
-        </a>
+          <a class="card" href="https://alphatestzeta.github.io/Pong/" target="_blank" rel="noopener">
+            <div class="folder-unit">
+              <div class="paper"><img src="Pong.png" alt="Pong"></div>
+              <div class="folder">
+                <div class="tab"></div>
+                <div class="folder-info">
+                  <span class="card-tag">Link 01</span>
+                  <h3 class="card-title">Pong</h3>
+                  <p class="card-desc">The good old classic.</p>
+                </div>
+              </div>
+            </div>
+          </a>
 
+        </div>
       </div>
     </section>
 
@@ -360,23 +406,68 @@
         <div class="rule"></div>
       </div>
 
-      <div class="grid">
+      <div class="carousel-wrap">
+        <div class="carousel">
 
-        <div class="card placeholder">
-          <div class="card-fold"></div>
-          <div class="card-img-wrap"><span class="stamp">In arrivo</span></div>
-          <div class="card-body">
-            <span class="card-tag">APK 01</span>
-            <h3 class="card-title">Primo gioco in sviluppo</h3>
-            <p class="card-desc">Il primo APK è ancora in lavorazione. Torna a trovarci presto!</p>
-            <span class="card-btn">Non disponibile</span>
+          <div class="card placeholder">
+            <div class="folder-unit">
+              <div class="paper"><span class="stamp">In arrivo</span></div>
+              <div class="folder">
+                <div class="tab"></div>
+                <div class="folder-info">
+                  <span class="card-tag">APK 01</span>
+                  <h3 class="card-title">Primo gioco in sviluppo</h3>
+                  <p class="card-desc">Ancora in lavorazione. Torna a trovarci presto!</p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
+        </div>
       </div>
     </section>
 
   </main>
+
+  <script>
+    // Drag-to-scroll per i caroselli, senza rompere il click sui link
+    document.querySelectorAll('.carousel').forEach((carousel) => {
+      let isDown = false;
+      let startX = 0;
+      let startScroll = 0;
+      let moved = false;
+
+      carousel.addEventListener('mousedown', (e) => {
+        isDown = true;
+        moved = false;
+        startX = e.pageX;
+        startScroll = carousel.scrollLeft;
+        carousel.classList.add('dragging');
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        const delta = e.pageX - startX;
+        if (Math.abs(delta) > 4) moved = true;
+        carousel.scrollLeft = startScroll - delta;
+      });
+
+      window.addEventListener('mouseup', () => {
+        isDown = false;
+        carousel.classList.remove('dragging');
+      });
+
+      // Se l'utente ha trascinato, il click sul link viene annullato
+      carousel.querySelectorAll('a.card').forEach((link) => {
+        link.addEventListener('click', (e) => {
+          if (moved) {
+            e.preventDefault();
+            moved = false;
+          }
+        });
+      });
+    });
+  </script>
 
 </body>
 </html>

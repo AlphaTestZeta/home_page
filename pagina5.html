@@ -28,13 +28,11 @@
     --gold-lo:    #7a5e13;
     --gold-deep:  #4a3707;
 
-    /* Bordeaux / vino */
     --wine:       #6b1024;
     --wine-hi:    #8f1a30;
     --wine-lo:    #3a0814;
     --wine-deep:  #1a0409;
 
-    /* Rosso casinò */
     --red:        #a51818;
     --red-hi:     #d92a2a;
     --red-lo:     #5c0c0c;
@@ -234,7 +232,8 @@
   /* ============================================================
      SHARED CONTROL SIZING
      ============================================================ */
-  .action-buttons,
+  .top-actions,
+  .flag-row,
   .bet-controls,
   .difficulty-selector,
   .game-info,
@@ -247,15 +246,9 @@
   }
 
   /* ============================================================
-     ACTION BUTTONS (ora in cima)
+     ACTION BUTTONS — base
      ============================================================ */
-  .action-buttons {
-    display: flex;
-    gap: 8px;
-  }
-
   .action-btn {
-    flex: 1;
     padding: 12px 8px;
     display: flex;
     flex-direction: column;
@@ -271,7 +264,7 @@
     border: 1px solid var(--gold);
     background: linear-gradient(180deg, #1a1a1a 0%, #060606 100%);
     color: var(--gold);
-    transition: transform 0.12s, box-shadow 0.2s, background 0.2s, color 0.2s;
+    transition: transform 0.12s, box-shadow 0.2s, background 0.2s, color 0.2s, border-color 0.2s;
     position: relative;
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,0.06),
@@ -311,7 +304,18 @@
     font-weight: 700;
   }
 
-  /* Nuova partita → bordò + oro */
+  /* ============================================================
+     TOP ACTIONS (Nuova Partita + Incassa)
+     ============================================================ */
+  .top-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .top-actions .action-btn {
+    flex: 1;
+  }
+
   .action-btn.new-game {
     background: linear-gradient(180deg, var(--wine-hi) 0%, var(--wine-lo) 100%);
     border-color: var(--gold);
@@ -325,15 +329,6 @@
     box-shadow: 0 2px 0 #000, 0 0 18px rgba(143,26,48,0.65);
   }
 
-  /* Flag mode attivo */
-  .action-btn.flag-active {
-    background: linear-gradient(180deg, var(--red-hi) 0%, var(--red-lo) 100%);
-    color: #fff;
-    border-color: var(--red-hi);
-    box-shadow: 0 2px 0 #000, 0 0 16px rgba(217,42,42,0.55);
-  }
-
-  /* Incassa */
   .action-btn.cash-out {
     background: linear-gradient(180deg, #3a0a0a 0%, #1a0404 100%);
     border-color: var(--red);
@@ -345,6 +340,46 @@
     color: #fff;
     border-color: var(--red-hi);
     box-shadow: 0 2px 0 #000, 0 0 16px rgba(217,42,42,0.5);
+  }
+
+  /* ============================================================
+     FLAG ROW (sopra il tabellone)
+     ============================================================ */
+  .flag-row {
+    display: flex;
+  }
+
+  .flag-row .action-btn {
+    flex: 1;
+    flex-direction: row;
+    gap: 10px;
+    padding: 11px 16px;
+  }
+
+  .flag-row .action-btn .text {
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+  }
+
+  .flag-row .action-btn .icon {
+    font-size: 1.15rem;
+  }
+
+  /* Stato attivo */
+  .action-btn.flag-active {
+    background: linear-gradient(180deg, var(--red-hi) 0%, var(--red-lo) 100%);
+    color: #fff;
+    border-color: var(--red-hi);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.15),
+      0 2px 0 #000,
+      0 0 18px rgba(217,42,42,0.6);
+  }
+
+  .action-btn.flag-active:hover {
+    background: linear-gradient(180deg, #ff3838 0%, var(--red) 100%);
+    color: #fff;
+    border-color: #ff6060;
   }
 
   /* ============================================================
@@ -1048,7 +1083,6 @@
     border-color: var(--red-hi);
   }
 
-  /* Carte raddoppia o perdi */
   #doubleCard0,
   #doubleCard1 {
     aspect-ratio: 3 / 4.2;
@@ -1133,6 +1167,10 @@
     .action-btn .icon { font-size: 1.1rem; }
     .action-btn .text { font-size: 0.55rem; }
 
+    .flag-row .action-btn { padding: 10px 12px; }
+    .flag-row .action-btn .text { font-size: 0.62rem; }
+    .flag-row .action-btn .icon { font-size: 1rem; }
+
     .modal { padding: 24px 18px; }
     .modal-title { font-size: 1.25rem; }
     .modal-win-amount { font-size: 1.9rem; }
@@ -1144,7 +1182,8 @@
     .game-title { font-size: 2rem; }
     .main { padding: 26px 24px 48px; gap: 16px; }
 
-    .action-buttons,
+    .top-actions,
+    .flag-row,
     .bet-controls,
     .difficulty-selector,
     .game-info,
@@ -1183,15 +1222,11 @@
   <main class="main">
     <h1 class="game-title">💣 Campo Minato Casinò 💰</h1>
 
-    <!-- ACTION BUTTONS (in cima) -->
-    <div class="action-buttons">
+    <!-- TOP ACTIONS: Nuova Partita + Incassa -->
+    <div class="top-actions">
       <button class="action-btn new-game" onclick="newGame()">
         <span class="icon">🎲</span>
         <span class="text">Nuova Partita</span>
-      </button>
-      <button class="action-btn" onclick="toggleFlagMode()" id="flagModeBtn">
-        <span class="icon">🚩</span>
-        <span class="text">Modalità Bandiera</span>
       </button>
       <button class="action-btn cash-out" onclick="cashOut()" id="cashOutBtn" disabled>
         <span class="icon">💰</span>
@@ -1249,6 +1284,14 @@
     <div class="multiplier-display">
       <div class="multiplier-label">Moltiplicatore Vincita</div>
       <div class="multiplier-value" id="winMultiplier">1x</div>
+    </div>
+
+    <!-- FLAG MODE — sopra al campo -->
+    <div class="flag-row">
+      <button class="action-btn flag-btn" onclick="toggleFlagMode()" id="flagModeBtn">
+        <span class="icon">🚩</span>
+        <span class="text">Modalità Bandiera</span>
+      </button>
     </div>
 
     <!-- BOARD -->
@@ -1570,7 +1613,7 @@
     }
 
     // ============================================================
-    //  VITTORIA — basta rivelare tutte le celle non-mina
+    //  VITTORIA
     // ============================================================
     function checkWinCondition() {
       for (let i = 0; i < gameState.board.length; i++) {
@@ -1823,8 +1866,6 @@
 
     // ============================================================
     //  TOUCH — event delegation sul board
-    //  Tap breve  → azione normale (rivela o flag in base alla modalità)
-    //  Long press → azione opposta
     // ============================================================
     function setupBoardTouchHandlers() {
       const board = document.getElementById('gameBoard');

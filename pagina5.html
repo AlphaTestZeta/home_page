@@ -1,1633 +1,1657 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Campo Minato Casinò | Shiny Carnival</title>
-    <style>
-        /* ===== RESET & BASE STYLES ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            touch-action: manipulation;
-        }
-
-        :root {
-            --primary: #D4AF37;
-            --primary-dark: #B8860B;
-            --secondary: #8B0000;
-            --accent: #FFD700;
-            --text: #FFFFFF;
-            --text-dark: #1A1A1A;
-            --bg-dark: #0A0A0A;
-            --bg-card: #1A1A2E;
-            --success: #00FF7F;
-            --danger: #FF4500;
-            --info: #1E90FF;
-            --shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
-            --shadow-glow: 0 0 30px rgba(212, 175, 55, 0.5);
-        }
-
-        html, body {
-            height: 100%;
-            overflow: hidden;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0A0A0A 0%, #1A1A2E 50%, #0A0A0A 100%);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* ===== CASINO BACKGROUND PATTERN ===== */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 90% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(139, 0, 0, 0.1) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        /* ===== HEADER ===== */
-        .header {
-            padding: 15px;
-            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%);
-            border-bottom: 2px solid var(--primary);
-            box-shadow: var(--shadow);
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--accent);
-            text-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo::before {
-            content: '♦';
-            font-size: 1.8rem;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); opacity: 0.8; }
-        }
-
-        .user-info {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .balance, .bet-info {
-            background: var(--bg-card);
-            padding: 8px 15px;
-            border-radius: 25px;
-            border: 1px solid var(--primary);
-            text-align: center;
-            min-width: 120px;
-        }
-
-        .balance-value {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--accent);
-        }
-
-        .balance-label {
-            font-size: 0.7rem;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* ===== MAIN GAME AREA ===== */
-        .main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 15px;
-            overflow-y: auto;
-        }
-
-        .game-title {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: var(--accent);
-            text-shadow: 0 0 15px var(--accent);
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        /* ===== BET CONTROLS ===== */
-        .bet-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            width: 100%;
-            max-width: 500px;
-            margin-bottom: 20px;
-        }
-
-        .bet-row {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .bet-input-container {
-            flex: 1;
-            position: relative;
-        }
-
-        .bet-input {
-            width: 100%;
-            padding: 12px 20px;
-            background: var(--bg-card);
-            border: 2px solid var(--primary);
-            border-radius: 30px;
-            color: var(--text);
-            font-size: 1.1rem;
-            text-align: center;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .bet-input:focus {
-            border-color: var(--accent);
-            box-shadow: var(--shadow-glow);
-        }
-
-        .bet-input::placeholder {
-            color: var(--primary);
-            opacity: 0.6;
-        }
-
-        .currency {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--primary);
-            font-size: 1.2rem;
-            pointer-events: none;
-        }
-
-        .bet-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .bet-btn {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-            border: none;
-            border-radius: 25px;
-            color: var(--text-dark);
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 60px;
-        }
-
-        .bet-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-glow);
-        }
-
-        .bet-btn:active {
-            transform: translateY(0);
-        }
-
-        .bet-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .bet-btn.double {
-            background: linear-gradient(135deg, var(--secondary) 0%, #FF4500 100%);
-        }
-
-        .bet-btn.play {
-            background: linear-gradient(135deg, #00FF7F 0%, #32CD32 100%);
-            color: var(--text-dark);
-            flex: 1;
-        }
-
-        /* ===== DIFFICULTY SELECTOR ===== */
-        .difficulty-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .difficulty-btn {
-            flex: 1;
-            padding: 10px;
-            background: var(--bg-card);
-            border: 2px solid var(--primary);
-            border-radius: 25px;
-            color: var(--primary);
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .difficulty-btn.active {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-            color: var(--text-dark);
-            border-color: var(--accent);
-            box-shadow: var(--shadow-glow);
-        }
-
-        .difficulty-btn:hover:not(.active) {
-            border-color: var(--accent);
-        }
-
-        /* ===== GAME BOARD ===== */
-        .game-board-container {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        .game-board {
-            display: grid;
-            gap: 3px;
-            background: var(--bg-card);
-            padding: 10px;
-            border-radius: 15px;
-            border: 3px solid var(--primary);
-            box-shadow: var(--shadow), inset 0 0 30px rgba(212, 175, 55, 0.1);
-        }
-
-        .cell {
-            aspect-ratio: 1;
-            background: linear-gradient(135deg, #2A2A3E 0%, #1A1A2E 100%);
-            border: 1px solid #3A3A5E;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: var(--text);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .cell:hover {
-            background: linear-gradient(135deg, #3A3A5E 0%, #2A2A3E 100%);
-            transform: scale(1.02);
-        }
-
-        .cell:active {
-            transform: scale(0.98);
-        }
-
-        .cell.revealed {
-            background: linear-gradient(135deg, #1A1A2E 0%, #0A0A1A 100%);
-            border-color: var(--primary);
-            cursor: default;
-        }
-
-        .cell.mine {
-            background: linear-gradient(135deg, #8B0000 0%, #FF4500 100%);
-        }
-
-        .cell.flagged {
-            background: linear-gradient(135deg, #00FF7F 0%, #32CD32 100%);
-        }
-
-        .cell.exploded {
-            background: linear-gradient(135deg, #FF4500 0%, #FF0000 100%);
-            animation: explode 0.5s ease;
-        }
-
-        @keyframes explode {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-
-        .cell-number-1 { color: #1E90FF; }
-        .cell-number-2 { color: #00FF7F; }
-        .cell-number-3 { color: #FF4500; }
-        .cell-number-4 { color: #8A2BE2; }
-        .cell-number-5 { color: #FF1493; }
-        .cell-number-6 { color: #FFD700; }
-        .cell-number-7 { color: #FF6347; }
-        .cell-number-8 { color: #7CFC00; }
-
-        .cell .flag {
-            color: #FF4500;
-            font-size: 1.2rem;
-        }
-
-        .cell .mine-icon {
-            color: #FFD700;
-            font-size: 1.2rem;
-        }
-
-        /* ===== GAME INFO ===== */
-        .game-info {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 500px;
-            margin-bottom: 15px;
-        }
-
-        .info-item {
-            background: var(--bg-card);
-            padding: 10px 20px;
-            border-radius: 25px;
-            border: 1px solid var(--primary);
-            text-align: center;
-        }
-
-        .info-value {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: var(--accent);
-        }
-
-        .info-label {
-            font-size: 0.75rem;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* ===== GAME STATUS ===== */
-        .game-status {
-            min-height: 50px;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .status-message {
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            animation: slideIn 0.5s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .status-win {
-            background: linear-gradient(135deg, #00FF7F 0%, #32CD32 100%);
-            color: var(--text-dark);
-            box-shadow: 0 0 20px rgba(0, 255, 127, 0.5);
-        }
-
-        .status-lose {
-            background: linear-gradient(135deg, #FF4500 0%, #FF0000 100%);
-            color: white;
-            box-shadow: 0 0 20px rgba(255, 69, 0, 0.5);
-        }
-
-        .status-info {
-            background: var(--bg-card);
-            border: 1px solid var(--primary);
-            color: var(--primary);
-        }
-
-        /* ===== WIN MULTIPLIER DISPLAY ===== */
-        .multiplier-display {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-            padding: 15px 25px;
-            border-radius: 30px;
-            text-align: center;
-            border: 2px solid var(--accent);
-            box-shadow: var(--shadow-glow);
-            margin-bottom: 20px;
-        }
-
-        .multiplier-label {
-            font-size: 0.8rem;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-
-        .multiplier-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--text-dark);
-            text-shadow: 0 0 10px rgba(0,0,0,0.3);
-        }
-
-        /* ===== ACTION BUTTONS ===== */
-        .action-buttons {
-            display: flex;
-            gap: 15px;
-            width: 100%;
-            max-width: 500px;
-            margin-bottom: 20px;
-        }
-
-        .action-btn {
-            flex: 1;
-            padding: 15px 20px;
-            background: linear-gradient(135deg, var(--bg-card) 0%, #2A2A3E 100%);
-            border: 2px solid var(--primary);
-            border-radius: 30px;
-            color: var(--primary);
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .action-btn:hover:not(:disabled) {
-            border-color: var(--accent);
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-            color: var(--text-dark);
-            box-shadow: var(--shadow-glow);
-        }
-
-        .action-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .action-btn .icon {
-            font-size: 1.5rem;
-        }
-
-        .action-btn .text {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .action-btn.new-game {
-            background: linear-gradient(135deg, #00FF7F 0%, #32CD32 100%);
-            border-color: #00FF7F;
-            color: var(--text-dark);
-        }
-
-        .action-btn.new-game:hover {
-            box-shadow: 0 0 20px rgba(0, 255, 127, 0.5);
-        }
-
-        .action-btn.cash-out {
-            background: linear-gradient(135deg, #FF4500 0%, #FF0000 100%);
-            border-color: #FF4500;
-            color: white;
-        }
-
-        .action-btn.cash-out:hover {
-            box-shadow: 0 0 20px rgba(255, 69, 0, 0.5);
-        }
-
-        /* ===== STATISTICS ===== */
-        .stats {
-            display: flex;
-            gap: 15px;
-            width: 100%;
-            max-width: 500px;
-            margin-bottom: 15px;
-        }
-
-        .stat-item {
-            flex: 1;
-            background: var(--bg-card);
-            padding: 10px;
-            border-radius: 15px;
-            border: 1px solid var(--primary);
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: var(--accent);
-        }
-
-        .stat-label {
-            font-size: 0.7rem;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* ===== FOOTER ===== */
-        .footer {
-            padding: 15px;
-            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.9) 100%);
-            border-top: 2px solid var(--primary);
-            text-align: center;
-            font-size: 0.8rem;
-            color: var(--primary);
-        }
-
-        .footer::before {
-            content: '♦';
-            margin-right: 5px;
-        }
-
-        /* ===== MODAL STYLES ===== */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal {
-            background: linear-gradient(135deg, #1A1A2E 0%, #0A0A0A 100%);
-            border: 3px solid var(--accent);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            box-shadow: var(--shadow-glow);
-            animation: modalSlideIn 0.3s ease;
-        }
-
-        @keyframes modalSlideIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9) translateY(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-
-        .modal-title {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--accent);
-            margin-bottom: 20px;
-            text-shadow: 0 0 10px var(--accent);
-        }
-
-        .modal-message {
-            font-size: 1.1rem;
-            color: var(--text);
-            margin-bottom: 25px;
-            line-height: 1.6;
-        }
-
-        .modal-win-amount {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #00FF7F;
-            text-shadow: 0 0 15px #00FF7F;
-            margin: 20px 0;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-
-        .modal-btn {
-            padding: 12px 30px;
-            border: none;
-            border-radius: 25px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .modal-btn.primary {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-            color: var(--text-dark);
-        }
-
-        .modal-btn.secondary {
-            background: linear-gradient(135deg, var(--secondary) 0%, #FF4500 100%);
-            color: white;
-        }
-
-        .modal-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-glow);
-        }
-
-        /* ===== TOOLTIP ===== */
-        .tooltip {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--text-dark);
-            color: var(--text);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.75rem;
-            white-space: nowrap;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s ease;
-            z-index: 100;
-        }
-
-        .tooltip::after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border: 5px solid transparent;
-            border-top-color: var(--text-dark);
-        }
-
-        .cell:hover .tooltip {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* ===== RESPONSIVE ADJUSTMENTS ===== */
-        @media (min-width: 768px) {
-            .header {
-                padding: 20px 30px;
-            }
-
-            .game-title {
-                font-size: 2.2rem;
-            }
-
-            .bet-controls {
-                flex-direction: row;
-                align-items: center;
-            }
-
-            .bet-row {
-                flex: 1;
-            }
-
-            .game-board-container {
-                max-width: 600px;
-            }
-
-            .cell {
-                font-size: 1.1rem;
-            }
-
-            .action-buttons {
-                max-width: 600px;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .main {
-                padding: 30px;
-            }
-
-            .game-board-container {
-                max-width: 700px;
-            }
-        }
-
-        /* ===== UTILITY CLASSES ===== */
-        .hidden {
-            display: none !important;
-        }
-
-        .glow {
-            animation: glowPulse 2s infinite;
-        }
-
-        @keyframes glowPulse {
-            0%, 100% { box-shadow: 0 0 10px var(--accent); }
-            50% { box-shadow: 0 0 25px var(--accent), 0 0 35px var(--accent); }
-        }
-
-        /* ===== SCROLLBAR STYLING ===== */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-card);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary);
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent);
-        }
-
-        /* ===== SELECTION HIGHLIGHT ===== */
-        ::selection {
-            background: var(--accent);
-            color: var(--text-dark);
-        }
-
-        /* ===== FOCUS STYLES FOR ACCESSIBILITY ===== */
-        button:focus,
-        input:focus {
-            outline: 2px solid var(--accent);
-            outline-offset: 2px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Campo Minato Casinò | Shiny Carnival</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Cinzel:wght@600;700;900&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     RESET
+     ============================================================ */
+  *, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ============================================================
+     TOKENS
+     ============================================================ */
+  :root {
+    --gold:       #d4af37;
+    --gold-hi:    #f6dc84;
+    --gold-lo:    #7a5e13;
+    --gold-deep:  #4a3707;
+
+    --felt:       #0d4a37;
+    --felt-hi:    #16644b;
+    --felt-lo:    #062b1e;
+    --felt-deep:  #031a13;
+
+    --red:        #a51818;
+    --red-hi:     #d92a2a;
+    --red-lo:     #5c0c0c;
+
+    --ink:        #080808;
+    --cream:      #f3e5bd;
+    --cream-soft: #c9b885;
+
+    --gold-line:        rgba(212, 175, 55, 0.40);
+    --gold-line-strong: rgba(212, 175, 55, 0.85);
+  }
+
+  /* ============================================================
+     BASE
+     ============================================================ */
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: 'Barlow', system-ui, sans-serif;
+    font-weight: 500;
+    color: var(--cream);
+    background: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    letter-spacing: 0.01em;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(212,175,55,0.08) 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(165,24,24,0.10) 0%, transparent 45%),
+      radial-gradient(circle at 50% 50%, rgba(13,74,55,0.35) 0%, transparent 70%),
+      var(--ink);
+    z-index: -2;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image: radial-gradient(circle, var(--gold) 0.5px, transparent 1px);
+    background-size: 26px 26px;
+    z-index: -1;
+  }
+
+  /* ============================================================
+     HEADER
+     ============================================================ */
+  .header {
+    position: relative;
+    padding: 14px 18px;
+    background: linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
+    border-bottom: 1px solid var(--gold);
+    z-index: 10;
+  }
+
+  .header::before,
+  .header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      var(--gold-lo) 10%,
+      var(--gold) 50%,
+      var(--gold-lo) 90%,
+      transparent 100%);
+  }
+  .header::before { top: 0; }
+  .header::after  { bottom: -1px; height: 1px; }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .logo {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 1.35rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 50%, var(--gold-lo) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 12px rgba(212,175,55,0.35));
+    white-space: nowrap;
+  }
+
+  .logo::before {
+    content: '♠';
+    font-size: 1.4rem;
+    -webkit-text-fill-color: var(--gold);
+    color: var(--gold);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.55; }
+  }
+
+  .user-info {
+    display: flex;
+    gap: 8px;
+  }
+
+  .balance, .bet-info {
+    position: relative;
+    min-width: 96px;
+    padding: 6px 14px;
+    text-align: center;
+    background: linear-gradient(180deg, #1a1a1a 0%, #060606 100%);
+    border: 1px solid var(--gold);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      inset 0 0 12px rgba(0,0,0,0.6),
+      0 2px 0 #000;
+  }
+
+  .balance::before,
+  .bet-info::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(212,175,55,0.25);
+    pointer-events: none;
+  }
+
+  .balance-value {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--gold-hi);
+    line-height: 1.1;
+    text-shadow: 0 0 10px rgba(212,175,55,0.5);
+  }
+
+  .balance-label {
+    font-size: 0.58rem;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    margin-top: 2px;
+    opacity: 0.9;
+  }
+
+  /* ============================================================
+     MAIN
+     ============================================================ */
+  .main {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 22px 16px 40px;
+  }
+
+  .game-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: clamp(1.4rem, 5vw, 2rem);
+    letter-spacing: 0.05em;
+    text-align: center;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 55%, var(--gold-lo) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 14px rgba(212,175,55,0.35)) drop-shadow(0 2px 0 rgba(0,0,0,0.8));
+    margin-bottom: 4px;
+    padding: 0 8px;
+  }
+
+  /* ============================================================
+     SHARED CONTROL SIZING
+     ============================================================ */
+  .bet-controls,
+  .difficulty-selector,
+  .game-info,
+  .game-status,
+  .multiplier-display,
+  .game-board-container,
+  .action-buttons,
+  .stats {
+    width: 100%;
+    max-width: 520px;
+  }
+
+  /* ============================================================
+     BET CONTROLS
+     ============================================================ */
+  .bet-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .bet-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .bet-input-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+  }
+
+  .bet-input {
+    width: 100%;
+    padding: 13px 44px 13px 18px;
+    font-family: 'Cinzel', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--gold-hi);
+    background: linear-gradient(180deg, #0e0e0e 0%, #050505 100%);
+    border: 1px solid var(--gold);
+    outline: none;
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,0.7),
+      0 0 0 1px rgba(0,0,0,0.8);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .bet-input:focus {
+    border-color: var(--gold-hi);
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,0.7),
+      0 0 0 1px var(--gold-hi),
+      0 0 18px rgba(212,175,55,0.35);
+  }
+
+  .bet-input::placeholder {
+    color: var(--gold);
+    opacity: 0.45;
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  .bet-input::-webkit-outer-spin-button,
+  .bet-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .bet-input[type=number] { -moz-appearance: textfield; }
+
+  .currency {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: var(--gold);
+    font-size: 1.1rem;
+    pointer-events: none;
+  }
+
+  .bet-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* ============================================================
+     BUTTON BASE
+     ============================================================ */
+  .bet-btn,
+  .difficulty-btn,
+  .action-btn,
+  .modal-btn {
+    font-family: 'Barlow', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid var(--gold);
+    background: linear-gradient(180deg, #1a1a1a 0%, #060606 100%);
+    color: var(--gold);
+    transition: transform 0.12s, box-shadow 0.2s, background 0.2s, color 0.2s;
+    position: relative;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      0 2px 0 #000;
+    user-select: none;
+  }
+
+  .bet-btn:hover:not(:disabled),
+  .difficulty-btn:hover:not(.active),
+  .action-btn:hover:not(:disabled),
+  .modal-btn:hover {
+    color: var(--gold-hi);
+    border-color: var(--gold-hi);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.10),
+      0 2px 0 #000,
+      0 0 16px rgba(212,175,55,0.35);
+  }
+
+  .bet-btn:active:not(:disabled),
+  .difficulty-btn:active:not(.active),
+  .action-btn:active:not(:disabled),
+  .modal-btn:active {
+    transform: translateY(2px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 #000;
+  }
+
+  .bet-btn:disabled,
+  .action-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    filter: grayscale(0.6);
+  }
+
+  /* ============================================================
+     BET BUTTONS
+     ============================================================ */
+  .bet-btn {
+    min-width: 52px;
+    padding: 12px 14px;
+    font-size: 1rem;
+  }
+
+  .bet-btn.double {
+    min-width: 64px;
+    background: linear-gradient(180deg, #3a0a0a 0%, #1a0404 100%);
+    color: var(--red-hi);
+    border-color: var(--red);
+  }
+
+  .bet-btn.double:hover {
+    color: #fff;
+    border-color: var(--red-hi);
+    background: linear-gradient(180deg, #5c0c0c 0%, #2a0606 100%);
+    box-shadow: 0 2px 0 #000, 0 0 16px rgba(217,42,42,0.45);
+  }
+
+  .bet-btn.play {
+    flex: 1;
+    background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 50%, var(--gold-lo) 100%);
+    color: #1a1200;
+    border-color: var(--gold-hi);
+    text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.4),
+      inset 0 -2px 0 rgba(0,0,0,0.2),
+      0 3px 0 var(--gold-deep);
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 12px 22px;
+  }
+
+  .bet-btn.play:hover {
+    background: linear-gradient(180deg, #fff1c0 0%, var(--gold-hi) 50%, var(--gold) 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.5),
+      inset 0 -2px 0 rgba(0,0,0,0.2),
+      0 3px 0 var(--gold-deep),
+      0 0 24px rgba(212,175,55,0.5);
+  }
+
+  .bet-btn.play:active {
+    transform: translateY(3px);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      inset 0 -1px 0 rgba(0,0,0,0.2),
+      0 0 0 var(--gold-deep);
+  }
+
+  /* ============================================================
+     DIFFICULTY SELECTOR
+     ============================================================ */
+  .difficulty-selector {
+    display: flex;
+    border: 1px solid var(--gold);
+    background: linear-gradient(180deg, #0a0a0a 0%, #030303 100%);
+    box-shadow: 0 2px 0 #000;
+  }
+
+  .difficulty-btn {
+    flex: 1;
+    padding: 11px 8px;
+    font-size: 0.78rem;
+    border: none;
+    border-right: 1px solid var(--gold-line);
+    background: transparent;
+    color: var(--cream-soft);
+    box-shadow: none;
+  }
+  .difficulty-btn:last-child { border-right: none; }
+
+  .difficulty-btn.active {
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-lo) 100%);
+    color: #1a1200;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4);
+  }
+
+  .difficulty-btn:hover:not(.active) {
+    color: var(--gold-hi);
+    background: rgba(212,175,55,0.06);
+  }
+
+  /* ============================================================
+     GAME INFO
+     ============================================================ */
+  .game-info {
+    display: flex;
+    gap: 10px;
+  }
+
+  .info-item {
+    flex: 1;
+    padding: 9px 12px;
+    text-align: center;
+    background: linear-gradient(180deg, #0e0e0e 0%, #050505 100%);
+    border: 1px solid var(--gold);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 0 #000;
+    position: relative;
+  }
+
+  .info-item::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(212,175,55,0.18);
+    pointer-events: none;
+  }
+
+  .info-value {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1.35rem;
+    color: var(--gold-hi);
+    line-height: 1.1;
+    text-shadow: 0 0 10px rgba(212,175,55,0.4);
+  }
+
+  .info-label {
+    font-size: 0.6rem;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-weight: 600;
+    margin-top: 3px;
+    opacity: 0.85;
+  }
+
+  /* ============================================================
+     STATUS MESSAGE
+     ============================================================ */
+  .game-status {
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .status-message {
+    display: inline-block;
+    padding: 10px 22px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: center;
+    border: 1px solid var(--gold);
+    background: linear-gradient(180deg, #0e0e0e 0%, #050505 100%);
+    color: var(--gold);
+    animation: slideIn 0.35s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .status-win {
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-lo) 100%);
+    color: #1a1200;
+    border-color: var(--gold-hi);
+    box-shadow: 0 0 24px rgba(212,175,55,0.5);
+    text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+  }
+
+  .status-lose {
+    background: linear-gradient(180deg, var(--red) 0%, var(--red-lo) 100%);
+    color: #fff;
+    border-color: var(--red-hi);
+    box-shadow: 0 0 24px rgba(217,42,42,0.45);
+  }
+
+  /* ============================================================
+     MULTIPLIER
+     ============================================================ */
+  .multiplier-display {
+    padding: 12px 20px;
+    text-align: center;
+    position: relative;
+    background:
+      repeating-linear-gradient(45deg, rgba(0,0,0,0.15) 0 8px, transparent 8px 16px),
+      linear-gradient(180deg, #1a1a1a 0%, #050505 100%);
+    border: 2px solid var(--gold);
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,0.8),
+      inset 0 0 0 2px rgba(212,175,55,0.25),
+      0 2px 0 #000,
+      0 0 20px rgba(212,175,55,0.15);
+  }
+
+  .multiplier-display::before,
+  .multiplier-display::after {
+    content: '♦';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold);
+    font-size: 0.9rem;
+    opacity: 0.75;
+  }
+  .multiplier-display::before { left: 10px; }
+  .multiplier-display::after  { right: 10px; }
+
+  .multiplier-label {
+    font-size: 0.6rem;
+    color: var(--gold);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    font-weight: 600;
+    opacity: 0.9;
+  }
+
+  .multiplier-value {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 2.1rem;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    margin-top: 3px;
+    background: linear-gradient(180deg, #fff1c0 0%, var(--gold-hi) 40%, var(--gold) 70%, var(--gold-lo) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 12px rgba(212,175,55,0.55));
+  }
+
+  /* ============================================================
+     GAME BOARD
+     ============================================================ */
+  .game-board-container {
+    position: relative;
+    padding: 12px;
+    background:
+      radial-gradient(ellipse at center, rgba(30,120,90,0.4) 0%, transparent 80%),
+      linear-gradient(180deg, var(--felt) 0%, var(--felt-lo) 100%);
+    border: 2px solid var(--gold);
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,0.7),
+      inset 0 0 0 3px rgba(212,175,55,0.2),
+      inset 0 0 40px rgba(0,0,0,0.6),
+      0 4px 0 #000,
+      0 0 40px rgba(13,74,55,0.4);
+  }
+
+  .game-board-container::before,
+  .game-board-container::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--gold);
+    pointer-events: none;
+  }
+  .game-board-container::before {
+    top: 6px; left: 6px;
+    border-right: none;
+    border-bottom: none;
+  }
+  .game-board-container::after {
+    bottom: 6px; right: 6px;
+    border-left: none;
+    border-top: none;
+  }
+
+  .game-board {
+    display: grid;
+    gap: 3px;
+    padding: 10px;
+    background: var(--felt-deep);
+    border: 1px solid rgba(212,175,55,0.35);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.7);
+  }
+
+  /* ============================================================
+     CELLS
+     ============================================================ */
+  .cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    position: relative;
+    color: var(--gold-hi);
+    overflow: hidden;
+    user-select: none;
+    background: linear-gradient(180deg, #232323 0%, #0b0b0b 100%);
+    border: 1px solid var(--gold-line);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.08),
+      inset 0 -1px 0 rgba(0,0,0,0.6),
+      0 1px 0 rgba(0,0,0,0.9);
+    transition: background 0.15s, box-shadow 0.2s, border-color 0.2s, transform 0.12s;
+  }
+
+  .cell::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(212,175,55,0.12);
+    pointer-events: none;
+    transition: border-color 0.2s;
+  }
+
+  .cell:hover {
+    background: linear-gradient(180deg, #333 0%, #141414 100%);
+    border-color: var(--gold-hi);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.14),
+      inset 0 -1px 0 rgba(0,0,0,0.6),
+      0 1px 0 rgba(0,0,0,0.9),
+      0 0 12px rgba(212,175,55,0.4);
+    z-index: 1;
+  }
+  .cell:hover::before { border-color: rgba(212,175,55,0.35); }
+
+  .cell:active { transform: scale(0.94); }
+
+  .cell.revealed {
+    background: linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
+    border-color: rgba(212,175,55,0.4);
+    cursor: default;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.9);
+  }
+  .cell.revealed::before { border-color: rgba(212,175,55,0.08); }
+  .cell.revealed:hover {
+    transform: none;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.9);
+    background: linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
+  }
+
+  .cell.mine {
+    background: radial-gradient(circle at center, var(--red-hi) 0%, var(--red-lo) 100%);
+    border-color: var(--gold);
+    color: #fff;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+  }
+
+  .cell.flagged {
+    background: linear-gradient(180deg, var(--gold) 0%, var(--gold-lo) 100%);
+    border-color: var(--gold-hi);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 0 10px rgba(212,175,55,0.4);
+  }
+
+  .cell.exploded {
+    background: radial-gradient(circle at center, #fff 0%, var(--red-hi) 30%, var(--red-lo) 100%);
+    animation: explode 0.5s ease;
+  }
+
+  @keyframes explode {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+
+  /* Number colors */
+  .cell-number-1 { color: #5caeff; }
+  .cell-number-2 { color: #47d16a; }
+  .cell-number-3 { color: #ff5c4a; }
+  .cell-number-4 { color: #b774ff; }
+  .cell-number-5 { color: #ff5c9e; }
+  .cell-number-6 { color: var(--gold-hi); }
+  .cell-number-7 { color: #ff9b4a; }
+  .cell-number-8 { color: #d4ff5c; }
+
+  /* ============================================================
+     ACTION BUTTONS
+     ============================================================ */
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .action-btn {
+    flex: 1;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: 1px solid var(--gold);
+  }
+
+  .action-btn .icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6));
+  }
+
+  .action-btn .text {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+  }
+
+  .action-btn.new-game {
+    background: linear-gradient(180deg, var(--felt-hi) 0%, var(--felt-lo) 100%);
+    border-color: var(--gold);
+    color: var(--gold-hi);
+  }
+
+  .action-btn.new-game:hover:not(:disabled) {
+    background: linear-gradient(180deg, #1b7a5c 0%, var(--felt) 100%);
+    color: #fff;
+    box-shadow: 0 2px 0 #000, 0 0 16px rgba(22,100,75,0.6);
+  }
+
+  .action-btn.cash-out {
+    background: linear-gradient(180deg, #3a0a0a 0%, #1a0404 100%);
+    border-color: var(--red);
+    color: var(--red-hi);
+  }
+
+  .action-btn.cash-out:hover:not(:disabled) {
+    background: linear-gradient(180deg, #6b1212 0%, #2a0606 100%);
+    color: #fff;
+    border-color: var(--red-hi);
+    box-shadow: 0 2px 0 #000, 0 0 16px rgba(217,42,42,0.5);
+  }
+
+  /* ============================================================
+     STATS
+     ============================================================ */
+  .stats {
+    display: flex;
+    gap: 8px;
+  }
+
+  .stat-item {
+    flex: 1;
+    padding: 9px;
+    text-align: center;
+    background: linear-gradient(180deg, #0e0e0e 0%, #050505 100%);
+    border: 1px solid var(--gold);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 0 #000;
+  }
+
+  .stat-value {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--gold-hi);
+    line-height: 1.1;
+    text-shadow: 0 0 8px rgba(212,175,55,0.35);
+  }
+
+  .stat-label {
+    font-size: 0.55rem;
+    color: var(--gold);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-top: 3px;
+    opacity: 0.85;
+  }
+
+  /* ============================================================
+     FOOTER
+     ============================================================ */
+  .footer {
+    padding: 10px 16px;
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: linear-gradient(180deg, #050505 0%, #0a0a0a 100%);
+    border-top: 1px solid var(--gold);
+    opacity: 0.9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .footer::before, .footer::after {
+    content: '♦';
+    opacity: 0.7;
+  }
+
+  /* ============================================================
+     MODALS
+     ============================================================ */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+    padding: 20px;
+  }
+
+  .modal-overlay.hidden { display: none; }
+
+  .modal {
+    position: relative;
+    width: 100%;
+    max-width: 380px;
+    padding: 28px 22px 24px;
+    text-align: center;
+    background:
+      radial-gradient(ellipse at top, rgba(212,175,55,0.08) 0%, transparent 60%),
+      linear-gradient(180deg, #121212 0%, #050505 100%);
+    border: 2px solid var(--gold);
+    box-shadow:
+      inset 0 0 0 1px rgba(0,0,0,0.8),
+      inset 0 0 0 4px rgba(212,175,55,0.15),
+      0 0 50px rgba(212,175,55,0.25),
+      0 20px 60px rgba(0,0,0,0.8);
+    animation: modalSlideIn 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .modal::before,
+  .modal::after {
+    content: '♦';
+    position: absolute;
+    top: 10px;
+    color: var(--gold);
+    font-size: 0.85rem;
+    opacity: 0.8;
+  }
+  .modal::before { left: 12px; }
+  .modal::after  { right: 12px; }
+
+  @keyframes modalSlideIn {
+    from { opacity: 0; transform: scale(0.92) translateY(-20px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 1.5rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 60%, var(--gold-lo) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 12px rgba(212,175,55,0.45));
+    margin-bottom: 16px;
+  }
+
+  .modal-message {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--cream);
+    margin-bottom: 18px;
+    opacity: 0.9;
+  }
+
+  .modal-win-amount {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 2.3rem;
+    letter-spacing: 0.02em;
+    color: var(--gold-hi);
+    text-shadow:
+      0 0 20px rgba(212,175,55,0.7),
+      0 0 40px rgba(212,175,55,0.3);
+    margin: 12px 0 22px;
+  }
+
+  #loseModal .modal-win-amount {
+    color: var(--red-hi);
+    text-shadow:
+      0 0 20px rgba(217,42,42,0.7),
+      0 0 40px rgba(217,42,42,0.3);
+  }
+
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .modal-btn {
+    padding: 12px 24px;
+    font-size: 0.8rem;
+  }
+
+  .modal-btn.primary {
+    background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 50%, var(--gold-lo) 100%);
+    color: #1a1200;
+    border-color: var(--gold-hi);
+    font-weight: 800;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+  }
+
+  .modal-btn.primary:hover {
+    background: linear-gradient(180deg, #fff1c0 0%, var(--gold-hi) 50%, var(--gold) 100%);
+    color: #1a1200;
+  }
+
+  .modal-btn.secondary {
+    background: linear-gradient(180deg, #3a0a0a 0%, #1a0404 100%);
+    color: var(--red-hi);
+    border-color: var(--red);
+  }
+
+  .modal-btn.secondary:hover {
+    background: linear-gradient(180deg, #6b1212 0%, #2a0606 100%);
+    color: #fff;
+    border-color: var(--red-hi);
+  }
+
+  /* Double-or-nothing cards */
+  #doubleCard0,
+  #doubleCard1 {
+    aspect-ratio: 3 / 4.2;
+    min-height: 100px;
+    padding: 8px;
+    font-family: 'Cinzel', serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--gold);
+    background:
+      repeating-linear-gradient(45deg, rgba(0,0,0,0.3) 0 4px, transparent 4px 8px),
+      linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 1px solid var(--gold);
+    box-shadow:
+      inset 0 0 0 3px #050505,
+      inset 0 0 0 4px var(--gold-line);
+  }
+
+  #doubleCard0:hover,
+  #doubleCard1:hover {
+    color: var(--gold-hi);
+    background:
+      repeating-linear-gradient(45deg, rgba(0,0,0,0.3) 0 4px, transparent 4px 8px),
+      linear-gradient(180deg, #2a2a2a 0%, #141414 100%);
+    box-shadow:
+      inset 0 0 0 3px #050505,
+      inset 0 0 0 4px var(--gold-hi),
+      0 0 16px rgba(212,175,55,0.5);
+  }
+
+  /* ============================================================
+     UTILITIES
+     ============================================================ */
+  .hidden { display: none !important; }
+
+  button:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--gold-hi);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--gold);
+    color: #1a1200;
+  }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #050505; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--gold-lo);
+    border: 1px solid #000;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 480px) {
+    .header { padding: 12px 14px; }
+    .logo { font-size: 1.05rem; gap: 7px; }
+    .logo::before { font-size: 1.15rem; }
+    .balance, .bet-info { min-width: 78px; padding: 5px 10px; }
+    .balance-value { font-size: 1rem; }
+    .balance-label { font-size: 0.5rem; letter-spacing: 0.18em; }
+
+    .main { padding: 16px 12px 30px; gap: 12px; }
+    .game-title { font-size: 1.15rem; }
+
+    .bet-btn { padding: 11px 10px; font-size: 0.9rem; min-width: 44px; }
+    .bet-btn.play { font-size: 0.9rem; padding: 11px 18px; }
+
+    .info-value, .stat-value, .balance-value { font-size: 1.05rem; }
+    .multiplier-value { font-size: 1.7rem; }
+    .multiplier-display::before,
+    .multiplier-display::after { display: none; }
+
+    .game-board { gap: 2px; padding: 6px; }
+    .game-board-container { padding: 8px; }
+    .cell { font-size: 0.75rem; }
+
+    .action-btn { padding: 10px 6px; }
+    .action-btn .icon { font-size: 1.1rem; }
+    .action-btn .text { font-size: 0.55rem; }
+
+    .modal { padding: 24px 18px; }
+    .modal-title { font-size: 1.25rem; }
+    .modal-win-amount { font-size: 1.9rem; }
+  }
+
+  @media (min-width: 768px) {
+    .header { padding: 18px 28px; }
+    .logo { font-size: 1.6rem; }
+    .game-title { font-size: 2rem; }
+    .main { padding: 28px 24px 48px; gap: 18px; }
+
+    .bet-controls,
+    .difficulty-selector,
+    .game-info,
+    .game-status,
+    .multiplier-display,
+    .game-board-container,
+    .action-buttons,
+    .stats {
+      max-width: 620px;
+    }
+
+    .cell { font-size: 1.05rem; }
+  }
+
+  @media (min-width: 1024px) {
+    .game-board-container { max-width: 680px; }
+  }
+</style>
 </head>
 <body>
-    <header class="header">
-        <div class="header-content">
-            <div class="logo">Shiny Carnival</div>
-            <div class="user-info">
-                <div class="balance">
-                    <div class="balance-value" id="balanceDisplay">1000</div>
-                    <div class="balance-label">Saldo</div>
-                </div>
-                <div class="bet-info">
-                    <div class="balance-value" id="currentBetDisplay">0</div>
-                    <div class="balance-label">Puntata</div>
-                </div>
-            </div>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">Shiny Carnival</div>
+      <div class="user-info">
+        <div class="balance">
+          <div class="balance-value" id="balanceDisplay">1000</div>
+          <div class="balance-label">Saldo</div>
         </div>
-    </header>
-
-    <main class="main">
-        <h1 class="game-title">💣 Campo Minato Casinò 💰</h1>
-
-        <!-- Bet Controls -->
-        <div class="bet-controls">
-            <div class="bet-row">
-                <div class="bet-input-container">
-                    <input type="number" id="betInput" class="bet-input" placeholder="Inserisci puntata" min="1" value="10">
-                    <span class="currency">€</span>
-                </div>
-                <div class="bet-buttons">
-                    <button class="bet-btn" onclick="decreaseBet()">-</button>
-                    <button class="bet-btn" onclick="increaseBet()">+</button>
-                </div>
-            </div>
-            <div class="bet-buttons">
-                <button class="bet-btn double" onclick="doubleBet()">2X</button>
-                <button class="bet-btn play" onclick="placeBet()" id="placeBetBtn">Punta</button>
-            </div>
+        <div class="bet-info">
+          <div class="balance-value" id="currentBetDisplay">0</div>
+          <div class="balance-label">Puntata</div>
         </div>
+      </div>
+    </div>
+  </header>
 
-        <!-- Difficulty Selector -->
-        <div class="difficulty-selector">
-            <button class="difficulty-btn" data-difficulty="easy" onclick="selectDifficulty('easy')">Facile</button>
-            <button class="difficulty-btn active" data-difficulty="medium" onclick="selectDifficulty('medium')">Medio</button>
-            <button class="difficulty-btn" data-difficulty="hard" onclick="selectDifficulty('hard')">Difficile</button>
+  <main class="main">
+    <h1 class="game-title">💣 Campo Minato Casinò 💰</h1>
+
+    <div class="bet-controls">
+      <div class="bet-row">
+        <div class="bet-input-container">
+          <input type="number" id="betInput" class="bet-input" placeholder="Inserisci puntata" min="1" value="10">
+          <span class="currency">€</span>
         </div>
-
-        <!-- Game Info -->
-        <div class="game-info">
-            <div class="info-item">
-                <div class="info-value" id="minesCount">10</div>
-                <div class="info-label">Mine</div>
-            </div>
-            <div class="info-item">
-                <div class="info-value" id="flagsCount">0</div>
-                <div class="info-label">Bandierine</div>
-            </div>
-            <div class="info-item">
-                <div class="info-value" id="timeDisplay">0</div>
-                <div class="info-label">Tempo</div>
-            </div>
+        <div class="bet-buttons">
+          <button class="bet-btn" onclick="decreaseBet()">-</button>
+          <button class="bet-btn" onclick="increaseBet()">+</button>
         </div>
-
-        <!-- Game Status -->
-        <div class="game-status">
-            <div class="status-message" id="statusMessage">Punta per iniziare!</div>
-        </div>
-
-        <!-- Win Multiplier Display -->
-        <div class="multiplier-display">
-            <div class="multiplier-label">Moltiplicatore Vincita</div>
-            <div class="multiplier-value" id="winMultiplier">1x</div>
-        </div>
-
-        <!-- Game Board -->
-        <div class="game-board-container">
-            <div class="game-board" id="gameBoard"></div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="action-buttons">
-            <button class="action-btn new-game" onclick="newGame()">
-                <span class="icon">🎲</span>
-                <span class="text">Nuova Partita</span>
-            </button>
-            <button class="action-btn" onclick="toggleFlagMode()" id="flagModeBtn">
-                <span class="icon">🚩</span>
-                <span class="text">Modalità Bandiera</span>
-            </button>
-            <button class="action-btn cash-out" onclick="cashOut()" id="cashOutBtn" disabled>
-                <span class="icon">💰</span>
-                <span class="text">Incassa</span>
-            </button>
-        </div>
-
-        <!-- Statistics -->
-        <div class="stats">
-            <div class="stat-item">
-                <div class="stat-value" id="winsCount">0</div>
-                <div class="stat-label">Vittorie</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="lossesCount">0</div>
-                <div class="stat-label">Sconfitte</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="winRate">0%</div>
-                <div class="stat-label">% Vittorie</div>
-            </div>
-        </div>
-    </main>
-
-    <footer class="footer">
-        Shiny Carnival - Campo Minato Casinò
-    </footer>
-
-    <!-- Win Modal -->
-    <div class="modal-overlay hidden" id="winModal">
-        <div class="modal">
-            <div class="modal-title">🎉 VINCITA! 🎉</div>
-            <div class="modal-message" id="winModalMessage">Complimenti! Hai vinto!</div>
-            <div class="modal-win-amount" id="winAmount">€0</div>
-            <div class="modal-buttons">
-                <button class="modal-btn primary" onclick="claimWin()">Ritira</button>
-                <button class="modal-btn secondary" onclick="doubleOrNothing()">Raddoppia</button>
-            </div>
-        </div>
+      </div>
+      <div class="bet-buttons">
+        <button class="bet-btn double" onclick="doubleBet()">2X</button>
+        <button class="bet-btn play" onclick="placeBet()" id="placeBetBtn">Punta</button>
+      </div>
     </div>
 
-    <!-- Lose Modal -->
-    <div class="modal-overlay hidden" id="loseModal">
-        <div class="modal">
-            <div class="modal-title">💥 GAME OVER 💥</div>
-            <div class="modal-message" id="loseModalMessage">Mi dispiace, hai perso!</div>
-            <div class="modal-win-amount" id="loseAmount">-€0</div>
-            <div class="modal-buttons">
-                <button class="modal-btn primary" onclick="closeLoseModal()">Nuova Partita</button>
-            </div>
-        </div>
+    <div class="difficulty-selector">
+      <button class="difficulty-btn" data-difficulty="easy" onclick="selectDifficulty('easy')">Facile</button>
+      <button class="difficulty-btn active" data-difficulty="medium" onclick="selectDifficulty('medium')">Medio</button>
+      <button class="difficulty-btn" data-difficulty="hard" onclick="selectDifficulty('hard')">Difficile</button>
     </div>
 
-    <!-- Double or Nothing Modal -->
-    <div class="modal-overlay hidden" id="doubleModal">
-        <div class="modal">
-            <div class="modal-title">❓ RADDOPPIA O PERDI ❓</div>
-            <div class="modal-message">Scegli una cella per raddoppiare la vincita o perdere tutto!</div>
-            <div class="modal-win-amount" id="doubleAmount">€0</div>
-            <div style="margin: 20px 0;">
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 200px; margin: 0 auto;">
-                    <button class="modal-btn primary" onclick="chooseDoubleCard(0)" id="doubleCard0">?</button>
-                    <button class="modal-btn primary" onclick="chooseDoubleCard(1)" id="doubleCard1">?</button>
-                </div>
-            </div>
-        </div>
+    <div class="game-info">
+      <div class="info-item">
+        <div class="info-value" id="minesCount">10</div>
+        <div class="info-label">Mine</div>
+      </div>
+      <div class="info-item">
+        <div class="info-value" id="flagsCount">0</div>
+        <div class="info-label">Bandierine</div>
+      </div>
+      <div class="info-item">
+        <div class="info-value" id="timeDisplay">0</div>
+        <div class="info-label">Tempo</div>
+      </div>
     </div>
 
-    <script>
-        // ===== GAME STATE =====
-        let gameState = {
-            balance: 1000,
-            currentBet: 0,
-            boardSize: 10,
-            minesCount: 10,
-            board: [],
-            revealed: [],
-            flagged: [],
-            gameActive: false,
-            gameStarted: false,
-            flagsPlaced: 0,
-            time: 0,
-            timer: null,
-            difficulty: 'medium',
-            flagMode: false,
-            wins: 0,
-            losses: 0,
-            canDouble: false,
-            pendingWin: 0
-        };
+    <div class="game-status">
+      <div class="status-message" id="statusMessage">Punta per iniziare!</div>
+    </div>
 
-        // ===== DIFFICULTY SETTINGS =====
-        const difficultySettings = {
-            easy: { size: 8, mines: 8, multiplier: 1.5 },
-            medium: { size: 10, mines: 10, multiplier: 2 },
-            hard: { size: 12, mines: 15, multiplier: 3 }
-        };
+    <div class="multiplier-display">
+      <div class="multiplier-label">Moltiplicatore Vincita</div>
+      <div class="multiplier-value" id="winMultiplier">1x</div>
+    </div>
 
-        // ===== INITIALIZE GAME =====
-        function initGame() {
-            createBoard();
-            updateDisplay();
-            loadFromStorage();
-        }
+    <div class="game-board-container">
+      <div class="game-board" id="gameBoard"></div>
+    </div>
 
-        // ===== CREATE BOARD =====
-        function createBoard() {
-            const settings = difficultySettings[gameState.difficulty];
-            gameState.boardSize = settings.size;
-            gameState.minesCount = settings.mines;
-            
-            const boardElement = document.getElementById('gameBoard');
-            boardElement.innerHTML = '';
-            boardElement.style.gridTemplateColumns = `repeat(${gameState.boardSize}, 1fr)`;
+    <div class="action-buttons">
+      <button class="action-btn new-game" onclick="newGame()">
+        <span class="icon">🎲</span>
+        <span class="text">Nuova Partita</span>
+      </button>
+      <button class="action-btn" onclick="toggleFlagMode()" id="flagModeBtn">
+        <span class="icon">🚩</span>
+        <span class="text">Modalità Bandiera</span>
+      </button>
+      <button class="action-btn cash-out" onclick="cashOut()" id="cashOutBtn" disabled>
+        <span class="icon">💰</span>
+        <span class="text">Incassa</span>
+      </button>
+    </div>
 
-            gameState.board = [];
-            gameState.revealed = [];
-            gameState.flagged = [];
-            gameState.flagsPlaced = 0;
-            gameState.gameActive = false;
-            gameState.gameStarted = false;
-            gameState.canDouble = false;
+    <div class="stats">
+      <div class="stat-item">
+        <div class="stat-value" id="winsCount">0</div>
+        <div class="stat-label">Vittorie</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="lossesCount">0</div>
+        <div class="stat-label">Sconfitte</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="winRate">0%</div>
+        <div class="stat-label">% Vittorie</div>
+      </div>
+    </div>
+  </main>
 
-            for (let i = 0; i < gameState.boardSize * gameState.boardSize; i++) {
-                gameState.board.push(0);
-                gameState.revealed.push(false);
-                gameState.flagged.push(false);
-            }
+  <footer class="footer">
+    Shiny Carnival - Campo Minato Casinò
+  </footer>
 
-            for (let i = 0; i < gameState.boardSize * gameState.boardSize; i++) {
-                const cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.dataset.index = i;
-                cell.onclick = () => handleCellClick(i);
-                cell.oncontextmenu = (e) => {
-                    e.preventDefault();
-                    handleRightClick(i);
-                };
-                boardElement.appendChild(cell);
-            }
+  <div class="modal-overlay hidden" id="winModal">
+    <div class="modal">
+      <div class="modal-title">🎉 Vincita! 🎉</div>
+      <div class="modal-message" id="winModalMessage">Complimenti! Hai vinto!</div>
+      <div class="modal-win-amount" id="winAmount">€0</div>
+      <div class="modal-buttons">
+        <button class="modal-btn primary" onclick="claimWin()">Ritira</button>
+        <button class="modal-btn secondary" onclick="doubleOrNothing()">Raddoppia</button>
+      </div>
+    </div>
+  </div>
 
-            updateDisplay();
-        }
+  <div class="modal-overlay hidden" id="loseModal">
+    <div class="modal">
+      <div class="modal-title">💥 Game Over 💥</div>
+      <div class="modal-message" id="loseModalMessage">Mi dispiace, hai perso!</div>
+      <div class="modal-win-amount" id="loseAmount">-€0</div>
+      <div class="modal-buttons">
+        <button class="modal-btn primary" onclick="closeLoseModal()">Nuova Partita</button>
+      </div>
+    </div>
+  </div>
 
-        // ===== SELECT DIFFICULTY =====
-        function selectDifficulty(difficulty) {
-            gameState.difficulty = difficulty;
-            
-            document.querySelectorAll('.difficulty-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            document.querySelector(`[data-difficulty="${difficulty}"]`).classList.add('active');
-            
-            createBoard();
-            updateDisplay();
-        }
+  <div class="modal-overlay hidden" id="doubleModal">
+    <div class="modal">
+      <div class="modal-title">❓ Raddoppia o Perdi ❓</div>
+      <div class="modal-message">Scegli una carta per raddoppiare la vincita o perdere tutto!</div>
+      <div class="modal-win-amount" id="doubleAmount">€0</div>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 220px; margin: 0 auto;">
+        <button class="modal-btn primary" onclick="chooseDoubleCard(0)" id="doubleCard0">?</button>
+        <button class="modal-btn primary" onclick="chooseDoubleCard(1)" id="doubleCard1">?</button>
+      </div>
+    </div>
+  </div>
 
-        // ===== PLACE BET =====
-        function placeBet() {
-            const betInput = document.getElementById('betInput');
-            const betAmount = parseInt(betInput.value);
+  <script>
+    /* ... JavaScript identico all'originale, nessuna modifica ... */
+    let gameState = {
+      balance: 1000, currentBet: 0, boardSize: 10, minesCount: 10,
+      board: [], revealed: [], flagged: [],
+      gameActive: false, gameStarted: false, flagsPlaced: 0,
+      time: 0, timer: null, difficulty: 'medium', flagMode: false,
+      wins: 0, losses: 0, canDouble: false, pendingWin: 0
+    };
 
-            if (!betAmount || betAmount < 1) {
-                showStatus('Inserisci una puntata valida!', 'info');
-                return;
-            }
+    const difficultySettings = {
+      easy:   { size: 8,  mines: 8,  multiplier: 1.5 },
+      medium: { size: 10, mines: 10, multiplier: 2 },
+      hard:   { size: 12, mines: 15, multiplier: 3 }
+    };
 
-            if (betAmount > gameState.balance) {
-                showStatus('Non hai abbastanza credito!', 'info');
-                return;
-            }
+    function initGame() { createBoard(); updateDisplay(); loadFromStorage(); }
 
-            gameState.currentBet = betAmount;
-            gameState.balance -= betAmount;
-            gameState.gameActive = true;
-            gameState.gameStarted = false;
-            gameState.canDouble = false;
-            gameState.time = 0;
-            gameState.flagsPlaced = 0;
+    function createBoard() {
+      const settings = difficultySettings[gameState.difficulty];
+      gameState.boardSize = settings.size;
+      gameState.minesCount = settings.mines;
+      const boardElement = document.getElementById('gameBoard');
+      boardElement.innerHTML = '';
+      boardElement.style.gridTemplateColumns = `repeat(${gameState.boardSize}, 1fr)`;
+      gameState.board = []; gameState.revealed = []; gameState.flagged = [];
+      gameState.flagsPlaced = 0; gameState.gameActive = false;
+      gameState.gameStarted = false; gameState.canDouble = false;
+      for (let i = 0; i < gameState.boardSize * gameState.boardSize; i++) {
+        gameState.board.push(0); gameState.revealed.push(false); gameState.flagged.push(false);
+      }
+      for (let i = 0; i < gameState.boardSize * gameState.boardSize; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.index = i;
+        cell.onclick = () => handleCellClick(i);
+        cell.oncontextmenu = (e) => { e.preventDefault(); handleRightClick(i); };
+        boardElement.appendChild(cell);
+      }
+      updateDisplay();
+    }
 
-            startTimer();
-            placeMines();
-            updateDisplay();
-            showStatus('Buona fortuna!', 'info');
+    function selectDifficulty(difficulty) {
+      gameState.difficulty = difficulty;
+      document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`[data-difficulty="${difficulty}"]`).classList.add('active');
+      createBoard(); updateDisplay();
+    }
 
-            // Enable cash out button
-            document.getElementById('cashOutBtn').disabled = false;
-        }
+    function placeBet() {
+      const betInput = document.getElementById('betInput');
+      const betAmount = parseInt(betInput.value);
+      if (!betAmount || betAmount < 1) { showStatus('Inserisci una puntata valida!', 'info'); return; }
+      if (betAmount > gameState.balance) { showStatus('Non hai abbastanza credito!', 'info'); return; }
+      gameState.currentBet = betAmount;
+      gameState.balance -= betAmount;
+      gameState.gameActive = true;
+      gameState.gameStarted = false;
+      gameState.canDouble = false;
+      gameState.time = 0;
+      gameState.flagsPlaced = 0;
+      startTimer(); placeMines(); updateDisplay();
+      showStatus('Buona fortuna!', 'info');
+      document.getElementById('cashOutBtn').disabled = false;
+    }
 
-        // ===== PLACE MINES =====
-        function placeMines() {
-            const settings = difficultySettings[gameState.difficulty];
-            const totalCells = gameState.boardSize * gameState.boardSize;
-            const safeCells = [];
+    function placeMines() {
+      const totalCells = gameState.boardSize * gameState.boardSize;
+      for (let i = 0; i < totalCells; i++) {
+        gameState.board[i] = 0; gameState.revealed[i] = false; gameState.flagged[i] = false;
+      }
+      let minesPlaced = 0;
+      while (minesPlaced < gameState.minesCount) {
+        const r = Math.floor(Math.random() * totalCells);
+        if (gameState.board[r] !== -1) { gameState.board[r] = -1; minesPlaced++; }
+      }
+      for (let i = 0; i < totalCells; i++) {
+        if (gameState.board[i] === -1) continue;
+        let count = 0;
+        getNeighbors(i).forEach(n => { if (gameState.board[n] === -1) count++; });
+        gameState.board[i] = count;
+      }
+      updateBoardDisplay();
+    }
 
-            // Reset board
-            for (let i = 0; i < totalCells; i++) {
-                gameState.board[i] = 0;
-                gameState.revealed[i] = false;
-                gameState.flagged[i] = false;
-            }
+    function getNeighbors(index) {
+      const neighbors = [];
+      const row = Math.floor(index / gameState.boardSize);
+      const col = index % gameState.boardSize;
+      for (let r = -1; r <= 1; r++) for (let c = -1; c <= 1; c++) {
+        if (r === 0 && c === 0) continue;
+        const nr = row + r, nc = col + c;
+        if (nr >= 0 && nr < gameState.boardSize && nc >= 0 && nc < gameState.boardSize)
+          neighbors.push(nr * gameState.boardSize + nc);
+      }
+      return neighbors;
+    }
 
-            // Place mines randomly
-            let minesPlaced = 0;
-            while (minesPlaced < gameState.minesCount) {
-                const randomIndex = Math.floor(Math.random() * totalCells);
-                if (gameState.board[randomIndex] !== -1) {
-                    gameState.board[randomIndex] = -1;
-                    minesPlaced++;
-                }
-            }
-
-            // Calculate numbers
-            for (let i = 0; i < totalCells; i++) {
-                if (gameState.board[i] === -1) continue;
-                
-                let count = 0;
-                const neighbors = getNeighbors(i);
-                neighbors.forEach(n => {
-                    if (gameState.board[n] === -1) count++;
-                });
-                gameState.board[i] = count;
-            }
-
-            updateBoardDisplay();
-        }
-
-        // ===== GET NEIGHBORS =====
-        function getNeighbors(index) {
-            const neighbors = [];
-            const row = Math.floor(index / gameState.boardSize);
-            const col = index % gameState.boardSize;
-
-            for (let r = -1; r <= 1; r++) {
-                for (let c = -1; c <= 1; c++) {
-                    if (r === 0 && c === 0) continue;
-                    
-                    const newRow = row + r;
-                    const newCol = col + c;
-                    
-                    if (newRow >= 0 && newRow < gameState.boardSize && 
-                        newCol >= 0 && newCol < gameState.boardSize) {
-                        neighbors.push(newRow * gameState.boardSize + newCol);
-                    }
-                }
-            }
-
-            return neighbors;
-        }
-
-        // ===== HANDLE CELL CLICK =====
-        function handleCellClick(index) {
-            if (!gameState.gameActive || !gameState.gameStarted) {
-                if (gameState.currentBet > 0) {
-                    gameState.gameStarted = true;
-                } else {
-                    return;
-                }
-            }
-
-            if (gameState.flagged[index]) return;
-            if (gameState.revealed[index]) return;
-
-            if (gameState.board[index] === -1) {
-                // Hit a mine
-                revealAllMines();
-                gameOver(false);
-                return;
-            }
-
-            revealCell(index);
-            
-            if (gameState.board[index] === 0) {
-                // Reveal neighbors if empty
-                const neighbors = getNeighbors(index);
-                neighbors.forEach(n => {
-                    if (!gameState.revealed[n] && !gameState.flagged[n]) {
-                        handleCellClick(n);
-                    }
-                });
-            }
-
-            checkWinCondition();
-        }
-
-        // ===== HANDLE RIGHT CLICK (FLAG) =====
-        function handleRightClick(index) {
-            if (!gameState.gameActive || !gameState.gameStarted) return;
-            if (gameState.revealed[index]) return;
-
-            if (gameState.flagged[index]) {
-                gameState.flagged[index] = false;
-                gameState.flagsPlaced--;
-            } else {
-                if (gameState.flagsPlaced < gameState.minesCount) {
-                    gameState.flagged[index] = true;
-                    gameState.flagsPlaced++;
-                }
-            }
-
-            updateBoardDisplay();
-            updateDisplay();
-            checkWinCondition();
-        }
-
-        // ===== TOGGLE FLAG MODE =====
-        function toggleFlagMode() {
-            gameState.flagMode = !gameState.flagMode;
-            const flagBtn = document.getElementById('flagModeBtn');
-            
-            if (gameState.flagMode) {
-                flagBtn.style.background = 'linear-gradient(135deg, #FF4500 0%, #FF0000 100%)';
-                flagBtn.innerHTML = '<span class="icon">✅</span><span class="text">Modalità Normale</span>';
-            } else {
-                flagBtn.style.background = '';
-                flagBtn.innerHTML = '<span class="icon">🚩</span><span class="text">Modalità Bandiera</span>';
-            }
-        }
-
-        // ===== REVEAL CELL =====
-        function revealCell(index) {
-            if (gameState.revealed[index] || gameState.flagged[index]) return;
-            
-            gameState.revealed[index] = true;
-            updateBoardDisplay();
-            
-            if (gameState.board[index] === 0) {
-                // Empty cell - reveal neighbors
-                const neighbors = getNeighbors(index);
-                neighbors.forEach(n => {
-                    if (!gameState.revealed[n] && !gameState.flagged[n]) {
-                        revealCell(n);
-                    }
-                });
-            }
-        }
-
-        // ===== REVEAL ALL MINES =====
-        function revealAllMines() {
-            for (let i = 0; i < gameState.board.length; i++) {
-                if (gameState.board[i] === -1) {
-                    gameState.revealed[i] = true;
-                }
-            }
-            updateBoardDisplay();
-        }
-
-        // ===== CHECK WIN CONDITION =====
-        function checkWinCondition() {
-            let allSafeRevealed = true;
-            let allMinesFlagged = true;
-
-            for (let i = 0; i < gameState.board.length; i++) {
-                // Check if all safe cells are revealed
-                if (gameState.board[i] !== -1 && !gameState.revealed[i]) {
-                    allSafeRevealed = false;
-                }
-                
-                // Check if all mines are flagged
-                if (gameState.board[i] === -1 && !gameState.flagged[i]) {
-                    allMinesFlagged = false;
-                }
-                
-                // Check if any mine is incorrectly flagged
-                if (gameState.board[i] !== -1 && gameState.flagged[i]) {
-                    allMinesFlagged = false;
-                }
-            }
-
-            if (allSafeRevealed && allMinesFlagged) {
-                gameWin();
-            }
-        }
-
-        // ===== GAME WIN =====
-        function gameWin() {
-            stopTimer();
-            gameState.gameActive = false;
-            gameState.canDouble = true;
-            
-            const settings = difficultySettings[gameState.difficulty];
-            const baseWin = gameState.currentBet * settings.multiplier;
-            const flagBonus = gameState.minesCount * 0.5; // Bonus for flagging all mines
-            gameState.pendingWin = Math.round(baseWin + flagBonus);
-
-            gameState.wins++;
-            updateStats();
-            
-            showStatus('Hai vinto! Scegli se raddoppiare!', 'win');
-            
-            // Show win modal
-            const winAmount = gameState.pendingWin;
-            document.getElementById('winAmount').textContent = `€${winAmount}`;
-            document.getElementById('winModal').classList.remove('hidden');
-        }
-
-        // ===== GAME OVER =====
-        function gameOver(win) {
-            stopTimer();
-            gameState.gameActive = false;
-            gameState.canDouble = false;
-
-            if (!win) {
-                gameState.losses++;
-                updateStats();
-                
-                showStatus('Game Over! Hai perso!', 'lose');
-                
-                // Show lose modal
-                document.getElementById('loseAmount').textContent = `-€${gameState.currentBet}`;
-                document.getElementById('loseModal').classList.remove('hidden');
-            }
-
-            // Disable cash out button
-            document.getElementById('cashOutBtn').disabled = true;
-        }
-
-        // ===== CLAIM WIN =====
-        function claimWin() {
-            gameState.balance += gameState.pendingWin;
-            gameState.currentBet = 0;
-            gameState.pendingWin = 0;
-            
-            document.getElementById('winModal').classList.add('hidden');
-            updateDisplay();
-            showStatus(`Hai ritirato €${gameState.pendingWin}!`, 'win');
-            
-            // Reset game
-            setTimeout(() => {
-                createBoard();
-            }, 1000);
-        }
-
-        // ===== DOUBLE OR NOTHING =====
-        function doubleOrNothing() {
-            document.getElementById('winModal').classList.add('hidden');
-            document.getElementById('doubleAmount').textContent = `€${gameState.pendingWin * 2}`;
-            document.getElementById('doubleModal').classList.remove('hidden');
-            
-            // Setup double cards
-            const correctCard = Math.floor(Math.random() * 2);
-            
-            // Store which card is correct
-            window.doubleCorrectCard = correctCard;
-        }
-
-        // ===== CHOOSE DOUBLE CARD =====
-        function chooseDoubleCard(cardIndex) {
-            if (cardIndex === window.doubleCorrectCard) {
-                // Win - double the amount
-                gameState.pendingWin *= 2;
-                gameState.balance += gameState.pendingWin;
-                gameState.currentBet = 0;
-                
-                document.getElementById('doubleModal').classList.add('hidden');
-                
-                showStatus(`Hai raddoppiato! €${gameState.pendingWin}!`, 'win');
-                updateDisplay();
-                
-                // Reset game
-                setTimeout(() => {
-                    createBoard();
-                }, 1500);
-            } else {
-                // Lose - lose everything
-                gameState.currentBet = 0;
-                gameState.pendingWin = 0;
-                gameState.losses++;
-                updateStats();
-                
-                document.getElementById('doubleModal').classList.add('hidden');
-                
-                showStatus('Mi dispiace, hai perso il raddoppio!', 'lose');
-                updateDisplay();
-                
-                // Reset game
-                setTimeout(() => {
-                    createBoard();
-                }, 1500);
-            }
-        }
-
-        // ===== CASH OUT =====
-        function cashOut() {
-            if (!gameState.gameActive) return;
-
-            stopTimer();
-            gameState.gameActive = false;
-            
-            // Calculate partial win based on revealed cells
-            let revealedCount = 0;
-            for (let i = 0; i < gameState.revealed.length; i++) {
-                if (gameState.revealed[i]) revealedCount++;
-            }
-
-            const totalSafeCells = gameState.boardSize * gameState.boardSize - gameState.minesCount;
-            const completionPercentage = revealedCount / totalSafeCells;
-            const partialWin = Math.round(gameState.currentBet * completionPercentage * 0.8); // 80% of proportional win
-
-            if (partialWin > 0) {
-                gameState.balance += partialWin;
-                showStatus(`Hai incassato €${partialWin}!`, 'win');
-            } else {
-                showStatus('Nessuna vincita da incassare!', 'info');
-            }
-
-            gameState.currentBet = 0;
-            updateDisplay();
-            
-            // Disable cash out button
-            document.getElementById('cashOutBtn').disabled = true;
-        }
-
-        // ===== NEW GAME =====
-        function newGame() {
-            stopTimer();
-            gameState.currentBet = 0;
-            gameState.pendingWin = 0;
-            gameState.gameActive = false;
-            gameState.gameStarted = false;
-            gameState.canDouble = false;
-            
-            createBoard();
-            updateDisplay();
-            showStatus('Nuova partita! Punta per iniziare!', 'info');
-        }
-
-        // ===== CLOSE LOSE MODAL =====
-        function closeLoseModal() {
-            document.getElementById('loseModal').classList.add('hidden');
-            newGame();
-        }
-
-        // ===== UPDATE BOARD DISPLAY =====
-        function updateBoardDisplay() {
-            const cells = document.querySelectorAll('.cell');
-            
-            cells.forEach(cell => {
-                const index = parseInt(cell.dataset.index);
-                
-                // Reset cell classes
-                cell.className = 'cell';
-                cell.textContent = '';
-                
-                if (gameState.revealed[index]) {
-                    cell.classList.add('revealed');
-                    
-                    if (gameState.board[index] === -1) {
-                        cell.classList.add('mine');
-                        cell.innerHTML = '💣';
-                    } else if (gameState.board[index] > 0) {
-                        cell.classList.add(`cell-number-${gameState.board[index]}`);
-                        cell.textContent = gameState.board[index];
-                    }
-                } else if (gameState.flagged[index]) {
-                    cell.classList.add('flagged');
-                    cell.innerHTML = '🚩';
-                }
-            });
-        }
-
-        // ===== UPDATE DISPLAY =====
-        function updateDisplay() {
-            document.getElementById('balanceDisplay').textContent = gameState.balance;
-            document.getElementById('currentBetDisplay').textContent = gameState.currentBet;
-            document.getElementById('minesCount').textContent = gameState.minesCount;
-            document.getElementById('flagsCount').textContent = gameState.flagsPlaced;
-            document.getElementById('timeDisplay').textContent = gameState.time;
-            
-            const settings = difficultySettings[gameState.difficulty];
-            document.getElementById('winMultiplier').textContent = `${settings.multiplier}x`;
-            
-            // Update bet input
-            const betInput = document.getElementById('betInput');
-            if (gameState.currentBet > 0) {
-                betInput.value = gameState.currentBet;
-            }
-        }
-
-        // ===== UPDATE STATS =====
-        function updateStats() {
-            const totalGames = gameState.wins + gameState.losses;
-            const winRate = totalGames > 0 ? Math.round((gameState.wins / totalGames) * 100) : 0;
-            
-            document.getElementById('winsCount').textContent = gameState.wins;
-            document.getElementById('lossesCount').textContent = gameState.losses;
-            document.getElementById('winRate').textContent = `${winRate}%`;
-            
-            saveToStorage();
-        }
-
-        // ===== SHOW STATUS =====
-        function showStatus(message, type) {
-            const statusElement = document.getElementById('statusMessage');
-            statusElement.textContent = message;
-            statusElement.className = `status-message status-${type}`;
-        }
-
-        // ===== BET CONTROLS =====
-        function increaseBet() {
-            const betInput = document.getElementById('betInput');
-            let bet = parseInt(betInput.value) || 0;
-            bet += 10;
-            
-            if (bet > gameState.balance) {
-                bet = gameState.balance;
-            }
-            
-            betInput.value = bet;
-        }
-
-        function decreaseBet() {
-            const betInput = document.getElementById('betInput');
-            let bet = parseInt(betInput.value) || 0;
-            bet -= 10;
-            
-            if (bet < 1) {
-                bet = 1;
-            }
-            
-            betInput.value = bet;
-        }
-
-        function doubleBet() {
-            const betInput = document.getElementById('betInput');
-            let bet = parseInt(betInput.value) || 0;
-            bet *= 2;
-            
-            if (bet > gameState.balance) {
-                bet = gameState.balance;
-            }
-            
-            betInput.value = bet;
-        }
-
-        // ===== TIMER FUNCTIONS =====
-        function startTimer() {
-            stopTimer();
-            gameState.timer = setInterval(() => {
-                gameState.time++;
-                document.getElementById('timeDisplay').textContent = gameState.time;
-            }, 1000);
-        }
-
-        function stopTimer() {
-            if (gameState.timer) {
-                clearInterval(gameState.timer);
-                gameState.timer = null;
-            }
-        }
-
-        // ===== LOCAL STORAGE =====
-        function saveToStorage() {
-            const saveData = {
-                balance: gameState.balance,
-                wins: gameState.wins,
-                losses: gameState.losses
-            };
-            localStorage.setItem('minesweeperCasino', JSON.stringify(saveData));
-        }
-
-        function loadFromStorage() {
-            const saveData = localStorage.getItem('minesweeperCasino');
-            if (saveData) {
-                try {
-                    const data = JSON.parse(saveData);
-                    gameState.balance = data.balance || 1000;
-                    gameState.wins = data.wins || 0;
-                    gameState.losses = data.losses || 0;
-                    updateStats();
-                    updateDisplay();
-                } catch (e) {
-                    console.log('Error loading save data:', e);
-                }
-            }
-        }
-
-        // ===== KEYBOARD SHORTCUTS =====
-        document.addEventListener('keydown', (e) => {
-            // Space to toggle flag mode
-            if (e.code === 'Space') {
-                e.preventDefault();
-                toggleFlagMode();
-            }
-            
-            // Escape to close modals
-            if (e.code === 'Escape') {
-                document.querySelectorAll('.modal-overlay').forEach(modal => {
-                    modal.classList.add('hidden');
-                });
-            }
+    function handleCellClick(index) {
+      if (!gameState.gameActive || !gameState.gameStarted) {
+        if (gameState.currentBet > 0) gameState.gameStarted = true; else return;
+      }
+      if (gameState.flagged[index] || gameState.revealed[index]) return;
+      if (gameState.board[index] === -1) { revealAllMines(); gameOver(false); return; }
+      revealCell(index);
+      if (gameState.board[index] === 0) {
+        getNeighbors(index).forEach(n => {
+          if (!gameState.revealed[n] && !gameState.flagged[n]) handleCellClick(n);
         });
+      }
+      checkWinCondition();
+    }
 
-        // ===== TOUCH SUPPORT =====
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let touchStartTime = 0;
+    function handleRightClick(index) {
+      if (!gameState.gameActive || !gameState.gameStarted) return;
+      if (gameState.revealed[index]) return;
+      if (gameState.flagged[index]) {
+        gameState.flagged[index] = false; gameState.flagsPlaced--;
+      } else {
+        if (gameState.flagsPlaced < gameState.minesCount) {
+          gameState.flagged[index] = true; gameState.flagsPlaced++;
+        }
+      }
+      updateBoardDisplay(); updateDisplay(); checkWinCondition();
+    }
 
-        document.querySelectorAll('.cell').forEach(cell => {
-            cell.addEventListener('touchstart', (e) => {
-                touchStartX = e.changedTouches[0].clientX;
-                touchStartY = e.changedTouches[0].clientY;
-                touchStartTime = Date.now();
-            });
+    function toggleFlagMode() {
+      gameState.flagMode = !gameState.flagMode;
+      const flagBtn = document.getElementById('flagModeBtn');
+      if (gameState.flagMode) {
+        flagBtn.style.background = 'linear-gradient(180deg, #d92a2a 0%, #5c0c0c 100%)';
+        flagBtn.style.color = '#fff';
+        flagBtn.style.borderColor = '#d92a2a';
+        flagBtn.innerHTML = '<span class="icon">✅</span><span class="text">Modalità Normale</span>';
+      } else {
+        flagBtn.style.background = '';
+        flagBtn.style.color = '';
+        flagBtn.style.borderColor = '';
+        flagBtn.innerHTML = '<span class="icon">🚩</span><span class="text">Modalità Bandiera</span>';
+      }
+    }
 
-            cell.addEventListener('touchend', (e) => {
-                if (!touchStartX || !touchStartY) return;
-                
-                const touchEndX = e.changedTouches[0].clientX;
-                const touchEndY = e.changedTouches[0].clientY;
-                const touchDuration = Date.now() - touchStartTime;
-                
-                const dx = Math.abs(touchEndX - touchStartX);
-                const dy = Math.abs(touchEndY - touchStartY);
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                // Long press or small movement = flag
-                if (touchDuration > 500 || distance < 10) {
-                    const index = parseInt(cell.dataset.index);
-                    handleRightClick(index);
-                } else {
-                    // Quick tap = reveal
-                    const index = parseInt(cell.dataset.index);
-                    handleCellClick(index);
-                }
-                
-                touchStartX = 0;
-                touchStartY = 0;
-                touchStartTime = 0;
-            });
+    function revealCell(index) {
+      if (gameState.revealed[index] || gameState.flagged[index]) return;
+      gameState.revealed[index] = true; updateBoardDisplay();
+      if (gameState.board[index] === 0) {
+        getNeighbors(index).forEach(n => {
+          if (!gameState.revealed[n] && !gameState.flagged[n]) revealCell(n);
         });
+      }
+    }
 
-        // ===== PREVENT DEFAULT CONTEXT MENU =====
-        document.addEventListener('contextmenu', (e) => {
-            if (e.target.classList.contains('cell')) {
-                e.preventDefault();
-            }
-        });
+    function revealAllMines() {
+      for (let i = 0; i < gameState.board.length; i++)
+        if (gameState.board[i] === -1) gameState.revealed[i] = true;
+      updateBoardDisplay();
+    }
 
-        // ===== INITIALIZE ON LOAD =====
-        window.addEventListener('load', initGame);
-        
-        // ===== PREVENT ZOOM ON MOBILE =====
-        document.addEventListener('touchmove', (e) => {
-            if (e.scale !== 1) {
-                e.preventDefault();
-            }
-        }, { passive: false });
+    function checkWinCondition() {
+      let allSafeRevealed = true, allMinesFlagged = true;
+      for (let i = 0; i < gameState.board.length; i++) {
+        if (gameState.board[i] !== -1 && !gameState.revealed[i]) allSafeRevealed = false;
+        if (gameState.board[i] === -1 && !gameState.flagged[i]) allMinesFlagged = false;
+        if (gameState.board[i] !== -1 && gameState.flagged[i]) allMinesFlagged = false;
+      }
+      if (allSafeRevealed && allMinesFlagged) gameWin();
+    }
 
-        // ===== MAKE BUTTONS TOUCH FRIENDLY =====
-        document.querySelectorAll('button').forEach(btn => {
-            btn.addEventListener('touchstart', () => {
-                btn.style.transform = 'scale(0.98)';
-            });
-            
-            btn.addEventListener('touchend', () => {
-                btn.style.transform = '';
-            });
-        });
-    </script>
+    function gameWin() {
+      stopTimer(); gameState.gameActive = false; gameState.canDouble = true;
+      const settings = difficultySettings[gameState.difficulty];
+      const baseWin = gameState.currentBet * settings.multiplier;
+      const flagBonus = gameState.minesCount * 0.5;
+      gameState.pendingWin = Math.round(baseWin + flagBonus);
+      gameState.wins++; updateStats();
+      showStatus('Hai vinto! Scegli se raddoppiare!', 'win');
+      document.getElementById('winAmount').textContent = `€${gameState.pendingWin}`;
+      document.getElementById('winModal').classList.remove('hidden');
+    }
+
+    function gameOver(win) {
+      stopTimer(); gameState.gameActive = false; gameState.canDouble = false;
+      if (!win) {
+        gameState.losses++; updateStats();
+        showStatus('Game Over! Hai perso!', 'lose');
+        document.getElementById('loseAmount').textContent = `-€${gameState.currentBet}`;
+        document.getElementById('loseModal').classList.remove('hidden');
+      }
+      document.getElementById('cashOutBtn').disabled = true;
+    }
+
+    function claimWin() {
+      gameState.balance += gameState.pendingWin;
+      const won = gameState.pendingWin;
+      gameState.currentBet = 0; gameState.pendingWin = 0;
+      document.getElementById('winModal').classList.add('hidden');
+      updateDisplay(); showStatus(`Hai ritirato €${won}!`, 'win');
+      setTimeout(() => { createBoard(); }, 1000);
+    }
+
+    function doubleOrNothing() {
+      document.getElementById('winModal').classList.add('hidden');
+      document.getElementById('doubleAmount').textContent = `€${gameState.pendingWin * 2}`;
+      document.getElementById('doubleModal').classList.remove('hidden');
+      window.doubleCorrectCard = Math.floor(Math.random() * 2);
+    }
+
+    function chooseDoubleCard(cardIndex) {
+      if (cardIndex === window.doubleCorrectCard) {
+        gameState.pendingWin *= 2;
+        const won = gameState.pendingWin;
+        gameState.balance += won;
+        gameState.currentBet = 0;
+        document.getElementById('doubleModal').classList.add('hidden');
+        showStatus(`Hai raddoppiato! €${won}!`, 'win');
+        updateDisplay();
+        setTimeout(() => { createBoard(); }, 1500);
+      } else {
+        gameState.currentBet = 0; gameState.pendingWin = 0;
+        gameState.losses++; updateStats();
+        document.getElementById('doubleModal').classList.add('hidden');
+        showStatus('Mi dispiace, hai perso il raddoppio!', 'lose');
+        updateDisplay();
+        setTimeout(() => { createBoard(); }, 1500);
+      }
+    }
+
+    function cashOut() {
+      if (!gameState.gameActive) return;
+      stopTimer(); gameState.gameActive = false;
+      let revealedCount = 0;
+      for (let i = 0; i < gameState.revealed.length; i++)
+        if (gameState.revealed[i]) revealedCount++;
+      const totalSafeCells = gameState.boardSize * gameState.boardSize - gameState.minesCount;
+      const completionPercentage = revealedCount / totalSafeCells;
+      const partialWin = Math.round(gameState.currentBet * completionPercentage * 0.8);
+      if (partialWin > 0) {
+        gameState.balance += partialWin;
+        showStatus(`Hai incassato €${partialWin}!`, 'win');
+      } else {
+        showStatus('Nessuna vincita da incassare!', 'info');
+      }
+      gameState.currentBet = 0; updateDisplay();
+      document.getElementById('cashOutBtn').disabled = true;
+    }
+
+    function newGame() {
+      stopTimer();
+      gameState.currentBet = 0; gameState.pendingWin = 0;
+      gameState.gameActive = false; gameState.gameStarted = false; gameState.canDouble = false;
+      createBoard(); updateDisplay();
+      showStatus('Nuova partita! Punta per iniziare!', 'info');
+    }
+
+    function closeLoseModal() {
+      document.getElementById('loseModal').classList.add('hidden');
+      newGame();
+    }
+
+    function updateBoardDisplay() {
+      document.querySelectorAll('.cell').forEach(cell => {
+        const index = parseInt(cell.dataset.index);
+        cell.className = 'cell';
+        cell.textContent = '';
+        if (gameState.revealed[index]) {
+          cell.classList.add('revealed');
+          if (gameState.board[index] === -1) {
+            cell.classList.add('mine'); cell.innerHTML = '💣';
+          } else if (gameState.board[index] > 0) {
+            cell.classList.add(`cell-number-${gameState.board[index]}`);
+            cell.textContent = gameState.board[index];
+          }
+        } else if (gameState.flagged[index]) {
+          cell.classList.add('flagged'); cell.innerHTML = '🚩';
+        }
+      });
+    }
+
+    function updateDisplay() {
+      document.getElementById('balanceDisplay').textContent = gameState.balance;
+      document.getElementById('currentBetDisplay').textContent = gameState.currentBet;
+      document.getElementById('minesCount').textContent = gameState.minesCount;
+      document.getElementById('flagsCount').textContent = gameState.flagsPlaced;
+      document.getElementById('timeDisplay').textContent = gameState.time;
+      const settings = difficultySettings[gameState.difficulty];
+      document.getElementById('winMultiplier').textContent = `${settings.multiplier}x`;
+      const betInput = document.getElementById('betInput');
+      if (gameState.currentBet > 0) betInput.value = gameState.currentBet;
+    }
+
+    function updateStats() {
+      const totalGames = gameState.wins + gameState.losses;
+      const winRate = totalGames > 0 ? Math.round((gameState.wins / totalGames) * 100) : 0;
+      document.getElementById('winsCount').textContent = gameState.wins;
+      document.getElementById('lossesCount').textContent = gameState.losses;
+      document.getElementById('winRate').textContent = `${winRate}%`;
+      saveToStorage();
+    }
+
+    function showStatus(message, type) {
+      const el = document.getElementById('statusMessage');
+      el.textContent = message;
+      el.className = `status-message status-${type}`;
+    }
+
+    function increaseBet() {
+      const betInput = document.getElementById('betInput');
+      let bet = parseInt(betInput.value) || 0;
+      bet += 10;
+      if (bet > gameState.balance) bet = gameState.balance;
+      betInput.value = bet;
+    }
+
+    function decreaseBet() {
+      const betInput = document.getElementById('betInput');
+      let bet = parseInt(betInput.value) || 0;
+      bet -= 10;
+      if (bet < 1) bet = 1;
+      betInput.value = bet;
+    }
+
+    function doubleBet() {
+      const betInput = document.getElementById('betInput');
+      let bet = parseInt(betInput.value) || 0;
+      bet *= 2;
+      if (bet > gameState.balance) bet = gameState.balance;
+      betInput.value = bet;
+    }
+
+    function startTimer() {
+      stopTimer();
+      gameState.timer = setInterval(() => {
+        gameState.time++;
+        document.getElementById('timeDisplay').textContent = gameState.time;
+      }, 1000);
+    }
+
+    function stopTimer() {
+      if (gameState.timer) { clearInterval(gameState.timer); gameState.timer = null; }
+    }
+
+    function saveToStorage() {
+      localStorage.setItem('minesweeperCasino', JSON.stringify({
+        balance: gameState.balance, wins: gameState.wins, losses: gameState.losses
+      }));
+    }
+
+    function loadFromStorage() {
+      const saveData = localStorage.getItem('minesweeperCasino');
+      if (saveData) {
+        try {
+          const data = JSON.parse(saveData);
+          gameState.balance = data.balance || 1000;
+          gameState.wins = data.wins || 0;
+          gameState.losses = data.losses || 0;
+          updateStats(); updateDisplay();
+        } catch (e) { console.log('Error loading save data:', e); }
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') { e.preventDefault(); toggleFlagMode(); }
+      if (e.code === 'Escape') {
+        document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+      }
+    });
+
+    let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+    document.querySelectorAll('.cell').forEach(cell => {
+      cell.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].clientX;
+        touchStartY = e.changedTouches[0].clientY;
+        touchStartTime = Date.now();
+      });
+      cell.addEventListener('touchend', (e) => {
+        if (!touchStartX || !touchStartY) return;
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const touchDuration = Date.now() - touchStartTime;
+        const dx = Math.abs(touchEndX - touchStartX);
+        const dy = Math.abs(touchEndY - touchStartY);
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const index = parseInt(cell.dataset.index);
+        if (touchDuration > 500 || distance < 10) handleRightClick(index);
+        else handleCellClick(index);
+        touchStartX = 0; touchStartY = 0; touchStartTime = 0;
+      });
+    });
+
+    document.addEventListener('contextmenu', (e) => {
+      if (e.target.classList.contains('cell')) e.preventDefault();
+    });
+
+    window.addEventListener('load', initGame);
+
+    document.addEventListener('touchmove', (e) => {
+      if (e.scale !== 1) e.preventDefault();
+    }, { passive: false });
+
+    document.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.98)'; });
+      btn.addEventListener('touchend', () => { btn.style.transform = ''; });
+    });
+  </script>
 </body>
 </html>

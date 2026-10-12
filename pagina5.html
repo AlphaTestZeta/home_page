@@ -28,11 +28,13 @@
     --gold-lo:    #7a5e13;
     --gold-deep:  #4a3707;
 
-    --felt:       #0d4a37;
-    --felt-hi:    #16644b;
-    --felt-lo:    #062b1e;
-    --felt-deep:  #031a13;
+    /* Bordeaux / vino */
+    --wine:       #6b1024;
+    --wine-hi:    #8f1a30;
+    --wine-lo:    #3a0814;
+    --wine-deep:  #1a0409;
 
+    /* Rosso casinò */
     --red:        #a51818;
     --red-hi:     #d92a2a;
     --red-lo:     #5c0c0c;
@@ -69,8 +71,8 @@
     pointer-events: none;
     background:
       radial-gradient(circle at 15% 10%, rgba(212,175,55,0.08) 0%, transparent 45%),
-      radial-gradient(circle at 85% 90%, rgba(165,24,24,0.10) 0%, transparent 45%),
-      radial-gradient(circle at 50% 50%, rgba(13,74,55,0.35) 0%, transparent 70%),
+      radial-gradient(circle at 85% 90%, rgba(143,26,48,0.22) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(107,16,36,0.45) 0%, transparent 70%),
       var(--ink);
     z-index: -2;
   }
@@ -209,8 +211,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
-    padding: 22px 16px 40px;
+    gap: 14px;
+    padding: 20px 16px 40px;
   }
 
   .game-title {
@@ -225,23 +227,124 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 14px rgba(212,175,55,0.35)) drop-shadow(0 2px 0 rgba(0,0,0,0.8));
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     padding: 0 8px;
   }
 
   /* ============================================================
      SHARED CONTROL SIZING
      ============================================================ */
+  .action-buttons,
   .bet-controls,
   .difficulty-selector,
   .game-info,
   .game-status,
   .multiplier-display,
   .game-board-container,
-  .action-buttons,
   .stats {
     width: 100%;
     max-width: 520px;
+  }
+
+  /* ============================================================
+     ACTION BUTTONS (ora in cima)
+     ============================================================ */
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .action-btn {
+    flex: 1;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+
+    font-family: 'Barlow', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid var(--gold);
+    background: linear-gradient(180deg, #1a1a1a 0%, #060606 100%);
+    color: var(--gold);
+    transition: transform 0.12s, box-shadow 0.2s, background 0.2s, color 0.2s;
+    position: relative;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      0 2px 0 #000;
+    user-select: none;
+  }
+
+  .action-btn:hover:not(:disabled) {
+    color: var(--gold-hi);
+    border-color: var(--gold-hi);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.10),
+      0 2px 0 #000,
+      0 0 16px rgba(212,175,55,0.35);
+  }
+
+  .action-btn:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 #000;
+  }
+
+  .action-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    filter: grayscale(0.6);
+  }
+
+  .action-btn .icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6));
+  }
+
+  .action-btn .text {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+  }
+
+  /* Nuova partita → bordò + oro */
+  .action-btn.new-game {
+    background: linear-gradient(180deg, var(--wine-hi) 0%, var(--wine-lo) 100%);
+    border-color: var(--gold);
+    color: var(--gold-hi);
+  }
+
+  .action-btn.new-game:hover:not(:disabled) {
+    background: linear-gradient(180deg, #a52040 0%, var(--wine) 100%);
+    color: #fff;
+    border-color: var(--gold-hi);
+    box-shadow: 0 2px 0 #000, 0 0 18px rgba(143,26,48,0.65);
+  }
+
+  /* Flag mode attivo */
+  .action-btn.flag-active {
+    background: linear-gradient(180deg, var(--red-hi) 0%, var(--red-lo) 100%);
+    color: #fff;
+    border-color: var(--red-hi);
+    box-shadow: 0 2px 0 #000, 0 0 16px rgba(217,42,42,0.55);
+  }
+
+  /* Incassa */
+  .action-btn.cash-out {
+    background: linear-gradient(180deg, #3a0a0a 0%, #1a0404 100%);
+    border-color: var(--red);
+    color: var(--red-hi);
+  }
+
+  .action-btn.cash-out:hover:not(:disabled) {
+    background: linear-gradient(180deg, #6b1212 0%, #2a0606 100%);
+    color: #fff;
+    border-color: var(--red-hi);
+    box-shadow: 0 2px 0 #000, 0 0 16px rgba(217,42,42,0.5);
   }
 
   /* ============================================================
@@ -323,13 +426,7 @@
     gap: 8px;
   }
 
-  /* ============================================================
-     BUTTON BASE
-     ============================================================ */
-  .bet-btn,
-  .difficulty-btn,
-  .action-btn,
-  .modal-btn {
+  .bet-btn {
     font-family: 'Barlow', sans-serif;
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -339,17 +436,16 @@
     background: linear-gradient(180deg, #1a1a1a 0%, #060606 100%);
     color: var(--gold);
     transition: transform 0.12s, box-shadow 0.2s, background 0.2s, color 0.2s;
-    position: relative;
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,0.06),
       0 2px 0 #000;
     user-select: none;
+    min-width: 52px;
+    padding: 12px 14px;
+    font-size: 1rem;
   }
 
-  .bet-btn:hover:not(:disabled),
-  .difficulty-btn:hover:not(.active),
-  .action-btn:hover:not(:disabled),
-  .modal-btn:hover {
+  .bet-btn:hover:not(:disabled) {
     color: var(--gold-hi);
     border-color: var(--gold-hi);
     box-shadow:
@@ -358,28 +454,9 @@
       0 0 16px rgba(212,175,55,0.35);
   }
 
-  .bet-btn:active:not(:disabled),
-  .difficulty-btn:active:not(.active),
-  .action-btn:active:not(:disabled),
-  .modal-btn:active {
+  .bet-btn:active:not(:disabled) {
     transform: translateY(2px);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 #000;
-  }
-
-  .bet-btn:disabled,
-  .action-btn:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-    filter: grayscale(0.6);
-  }
-
-  /* ============================================================
-     BET BUTTONS
-     ============================================================ */
-  .bet-btn {
-    min-width: 52px;
-    padding: 12px 14px;
-    font-size: 1rem;
   }
 
   .bet-btn.double {
@@ -441,12 +518,18 @@
   .difficulty-btn {
     flex: 1;
     padding: 11px 8px;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 700;
     font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
     border: none;
     border-right: 1px solid var(--gold-line);
     background: transparent;
     color: var(--cream-soft);
-    box-shadow: none;
+    transition: background 0.2s, color 0.2s;
+    user-select: none;
   }
   .difficulty-btn:last-child { border-right: none; }
 
@@ -606,21 +689,21 @@
   }
 
   /* ============================================================
-     GAME BOARD
+     GAME BOARD — tavolo bordò
      ============================================================ */
   .game-board-container {
     position: relative;
     padding: 12px;
     background:
-      radial-gradient(ellipse at center, rgba(30,120,90,0.4) 0%, transparent 80%),
-      linear-gradient(180deg, var(--felt) 0%, var(--felt-lo) 100%);
+      radial-gradient(ellipse at center, rgba(143,26,48,0.55) 0%, transparent 80%),
+      linear-gradient(180deg, var(--wine) 0%, var(--wine-lo) 100%);
     border: 2px solid var(--gold);
     box-shadow:
       inset 0 0 0 1px rgba(0,0,0,0.7),
       inset 0 0 0 3px rgba(212,175,55,0.2),
-      inset 0 0 40px rgba(0,0,0,0.6),
+      inset 0 0 40px rgba(0,0,0,0.65),
       0 4px 0 #000,
-      0 0 40px rgba(13,74,55,0.4);
+      0 0 40px rgba(107,16,36,0.55);
   }
 
   .game-board-container::before,
@@ -647,9 +730,9 @@
     display: grid;
     gap: 3px;
     padding: 10px;
-    background: var(--felt-deep);
+    background: var(--wine-deep);
     border: 1px solid rgba(212,175,55,0.35);
-    box-shadow: inset 0 2px 8px rgba(0,0,0,0.7);
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.75);
   }
 
   /* ============================================================
@@ -748,62 +831,6 @@
   .cell-number-8 { color: #d4ff5c; }
 
   /* ============================================================
-     ACTION BUTTONS
-     ============================================================ */
-  .action-buttons {
-    display: flex;
-    gap: 8px;
-  }
-
-  .action-btn {
-    flex: 1;
-    padding: 12px 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    border: 1px solid var(--gold);
-  }
-
-  .action-btn .icon {
-    font-size: 1.25rem;
-    line-height: 1;
-    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.6));
-  }
-
-  .action-btn .text {
-    font-size: 0.6rem;
-    letter-spacing: 0.15em;
-    font-weight: 700;
-  }
-
-  .action-btn.new-game {
-    background: linear-gradient(180deg, var(--felt-hi) 0%, var(--felt-lo) 100%);
-    border-color: var(--gold);
-    color: var(--gold-hi);
-  }
-
-  .action-btn.new-game:hover:not(:disabled) {
-    background: linear-gradient(180deg, #1b7a5c 0%, var(--felt) 100%);
-    color: #fff;
-    box-shadow: 0 2px 0 #000, 0 0 16px rgba(22,100,75,0.6);
-  }
-
-  .action-btn.cash-out {
-    background: linear-gradient(180deg, #3a0a0a 0%, #1a0404 100%);
-    border-color: var(--red);
-    color: var(--red-hi);
-  }
-
-  .action-btn.cash-out:hover:not(:disabled) {
-    background: linear-gradient(180deg, #6b1212 0%, #2a0606 100%);
-    color: #fff;
-    border-color: var(--red-hi);
-    box-shadow: 0 2px 0 #000, 0 0 16px rgba(217,42,42,0.5);
-  }
-
-  /* ============================================================
      STATS
      ============================================================ */
   .stats {
@@ -889,6 +916,7 @@
     text-align: center;
     background:
       radial-gradient(ellipse at top, rgba(212,175,55,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at bottom, rgba(143,26,48,0.25) 0%, transparent 60%),
       linear-gradient(180deg, #121212 0%, #050505 100%);
     border: 2px solid var(--gold);
     box-shadow:
@@ -965,7 +993,34 @@
 
   .modal-btn {
     padding: 12px 24px;
+    font-family: 'Barlow', sans-serif;
+    font-weight: 700;
     font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid var(--gold);
+    background: linear-gradient(180deg, #1a1a1a 0%, #060606 100%);
+    color: var(--gold);
+    transition: transform 0.12s, box-shadow 0.2s, background 0.2s, color 0.2s;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.06),
+      0 2px 0 #000;
+    user-select: none;
+  }
+
+  .modal-btn:hover {
+    color: var(--gold-hi);
+    border-color: var(--gold-hi);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.10),
+      0 2px 0 #000,
+      0 0 16px rgba(212,175,55,0.35);
+  }
+
+  .modal-btn:active {
+    transform: translateY(2px);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 #000;
   }
 
   .modal-btn.primary {
@@ -993,7 +1048,7 @@
     border-color: var(--red-hi);
   }
 
-  /* Double-or-nothing cards */
+  /* Carte raddoppia o perdi */
   #doubleCard0,
   #doubleCard1 {
     aspect-ratio: 3 / 4.2;
@@ -1059,7 +1114,7 @@
     .balance-value { font-size: 1rem; }
     .balance-label { font-size: 0.5rem; letter-spacing: 0.18em; }
 
-    .main { padding: 16px 12px 30px; gap: 12px; }
+    .main { padding: 14px 12px 30px; gap: 11px; }
     .game-title { font-size: 1.15rem; }
 
     .bet-btn { padding: 11px 10px; font-size: 0.9rem; min-width: 44px; }
@@ -1087,15 +1142,15 @@
     .header { padding: 18px 28px; }
     .logo { font-size: 1.6rem; }
     .game-title { font-size: 2rem; }
-    .main { padding: 28px 24px 48px; gap: 18px; }
+    .main { padding: 26px 24px 48px; gap: 16px; }
 
+    .action-buttons,
     .bet-controls,
     .difficulty-selector,
     .game-info,
     .game-status,
     .multiplier-display,
     .game-board-container,
-    .action-buttons,
     .stats {
       max-width: 620px;
     }
@@ -1128,6 +1183,23 @@
   <main class="main">
     <h1 class="game-title">💣 Campo Minato Casinò 💰</h1>
 
+    <!-- ACTION BUTTONS (in cima) -->
+    <div class="action-buttons">
+      <button class="action-btn new-game" onclick="newGame()">
+        <span class="icon">🎲</span>
+        <span class="text">Nuova Partita</span>
+      </button>
+      <button class="action-btn" onclick="toggleFlagMode()" id="flagModeBtn">
+        <span class="icon">🚩</span>
+        <span class="text">Modalità Bandiera</span>
+      </button>
+      <button class="action-btn cash-out" onclick="cashOut()" id="cashOutBtn" disabled>
+        <span class="icon">💰</span>
+        <span class="text">Incassa</span>
+      </button>
+    </div>
+
+    <!-- BET CONTROLS -->
     <div class="bet-controls">
       <div class="bet-row">
         <div class="bet-input-container">
@@ -1145,12 +1217,14 @@
       </div>
     </div>
 
+    <!-- DIFFICULTY -->
     <div class="difficulty-selector">
       <button class="difficulty-btn" data-difficulty="easy" onclick="selectDifficulty('easy')">Facile</button>
       <button class="difficulty-btn active" data-difficulty="medium" onclick="selectDifficulty('medium')">Medio</button>
       <button class="difficulty-btn" data-difficulty="hard" onclick="selectDifficulty('hard')">Difficile</button>
     </div>
 
+    <!-- GAME INFO -->
     <div class="game-info">
       <div class="info-item">
         <div class="info-value" id="minesCount">10</div>
@@ -1166,34 +1240,23 @@
       </div>
     </div>
 
+    <!-- STATUS -->
     <div class="game-status">
       <div class="status-message" id="statusMessage">Punta per iniziare!</div>
     </div>
 
+    <!-- MULTIPLIER -->
     <div class="multiplier-display">
       <div class="multiplier-label">Moltiplicatore Vincita</div>
       <div class="multiplier-value" id="winMultiplier">1x</div>
     </div>
 
+    <!-- BOARD -->
     <div class="game-board-container">
       <div class="game-board" id="gameBoard"></div>
     </div>
 
-    <div class="action-buttons">
-      <button class="action-btn new-game" onclick="newGame()">
-        <span class="icon">🎲</span>
-        <span class="text">Nuova Partita</span>
-      </button>
-      <button class="action-btn" onclick="toggleFlagMode()" id="flagModeBtn">
-        <span class="icon">🚩</span>
-        <span class="text">Modalità Bandiera</span>
-      </button>
-      <button class="action-btn cash-out" onclick="cashOut()" id="cashOutBtn" disabled>
-        <span class="icon">💰</span>
-        <span class="text">Incassa</span>
-      </button>
-    </div>
-
+    <!-- STATS -->
     <div class="stats">
       <div class="stat-item">
         <div class="stat-value" id="winsCount">0</div>
@@ -1214,6 +1277,7 @@
     Shiny Carnival - Campo Minato Casinò
   </footer>
 
+  <!-- MODALS -->
   <div class="modal-overlay hidden" id="winModal">
     <div class="modal">
       <div class="modal-title">🎉 Vincita! 🎉</div>
@@ -1250,13 +1314,26 @@
   </div>
 
   <script>
-    /* ... JavaScript identico all'originale, nessuna modifica ... */
-    let gameState = {
-      balance: 1000, currentBet: 0, boardSize: 10, minesCount: 10,
-      board: [], revealed: [], flagged: [],
-      gameActive: false, gameStarted: false, flagsPlaced: 0,
-      time: 0, timer: null, difficulty: 'medium', flagMode: false,
-      wins: 0, losses: 0, canDouble: false, pendingWin: 0
+    // ============================================================
+    //  STATE
+    // ============================================================
+    const gameState = {
+      balance: 1000,
+      currentBet: 0,
+      boardSize: 10,
+      minesCount: 10,
+      board: [],
+      revealed: [],
+      flagged: [],
+      gameActive: false,
+      flagsPlaced: 0,
+      time: 0,
+      timer: null,
+      difficulty: 'medium',
+      flagMode: false,
+      wins: 0,
+      losses: 0,
+      pendingWin: 0
     };
 
     const difficultySettings = {
@@ -1265,72 +1342,118 @@
       hard:   { size: 12, mines: 15, multiplier: 3 }
     };
 
-    function initGame() { createBoard(); updateDisplay(); loadFromStorage(); }
+    // ============================================================
+    //  INIT
+    // ============================================================
+    function initGame() {
+      createBoard();
+      setupBoardTouchHandlers();
+      loadFromStorage();
+      updateDisplay();
+      updateStats();
+    }
 
     function createBoard() {
       const settings = difficultySettings[gameState.difficulty];
       gameState.boardSize = settings.size;
       gameState.minesCount = settings.mines;
-      const boardElement = document.getElementById('gameBoard');
-      boardElement.innerHTML = '';
-      boardElement.style.gridTemplateColumns = `repeat(${gameState.boardSize}, 1fr)`;
-      gameState.board = []; gameState.revealed = []; gameState.flagged = [];
-      gameState.flagsPlaced = 0; gameState.gameActive = false;
-      gameState.gameStarted = false; gameState.canDouble = false;
-      for (let i = 0; i < gameState.boardSize * gameState.boardSize; i++) {
-        gameState.board.push(0); gameState.revealed.push(false); gameState.flagged.push(false);
+
+      const boardEl = document.getElementById('gameBoard');
+      boardEl.innerHTML = '';
+      boardEl.style.gridTemplateColumns = `repeat(${gameState.boardSize}, 1fr)`;
+
+      gameState.board = [];
+      gameState.revealed = [];
+      gameState.flagged = [];
+      gameState.flagsPlaced = 0;
+      gameState.gameActive = false;
+      gameState.flagMode = false;
+      gameState.pendingWin = 0;
+
+      updateFlagButton();
+      document.getElementById('cashOutBtn').disabled = true;
+
+      const total = gameState.boardSize * gameState.boardSize;
+      for (let i = 0; i < total; i++) {
+        gameState.board.push(0);
+        gameState.revealed.push(false);
+        gameState.flagged.push(false);
       }
-      for (let i = 0; i < gameState.boardSize * gameState.boardSize; i++) {
+
+      for (let i = 0; i < total; i++) {
         const cell = document.createElement('div');
         cell.className = 'cell';
         cell.dataset.index = i;
         cell.onclick = () => handleCellClick(i);
         cell.oncontextmenu = (e) => { e.preventDefault(); handleRightClick(i); };
-        boardElement.appendChild(cell);
+        boardEl.appendChild(cell);
       }
+
       updateDisplay();
     }
 
+    // ============================================================
+    //  DIFFICOLTÀ
+    // ============================================================
     function selectDifficulty(difficulty) {
+      if (gameState.gameActive) {
+        showStatus('Partita in corso! Incassa o avvia una nuova partita.', 'info');
+        return;
+      }
       gameState.difficulty = difficulty;
-      document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
       document.querySelector(`[data-difficulty="${difficulty}"]`).classList.add('active');
-      createBoard(); updateDisplay();
+      createBoard();
     }
 
+    // ============================================================
+    //  PUNTATA
+    // ============================================================
     function placeBet() {
+      if (gameState.gameActive) {
+        showStatus('Partita già in corso!', 'info');
+        return;
+      }
       const betInput = document.getElementById('betInput');
       const betAmount = parseInt(betInput.value);
+
       if (!betAmount || betAmount < 1) { showStatus('Inserisci una puntata valida!', 'info'); return; }
       if (betAmount > gameState.balance) { showStatus('Non hai abbastanza credito!', 'info'); return; }
+
       gameState.currentBet = betAmount;
       gameState.balance -= betAmount;
       gameState.gameActive = true;
-      gameState.gameStarted = false;
-      gameState.canDouble = false;
       gameState.time = 0;
       gameState.flagsPlaced = 0;
-      startTimer(); placeMines(); updateDisplay();
+
+      startTimer();
+      placeMines();
+      updateDisplay();
       showStatus('Buona fortuna!', 'info');
       document.getElementById('cashOutBtn').disabled = false;
     }
 
     function placeMines() {
-      const totalCells = gameState.boardSize * gameState.boardSize;
-      for (let i = 0; i < totalCells; i++) {
-        gameState.board[i] = 0; gameState.revealed[i] = false; gameState.flagged[i] = false;
+      const total = gameState.boardSize * gameState.boardSize;
+      for (let i = 0; i < total; i++) {
+        gameState.board[i] = 0;
+        gameState.revealed[i] = false;
+        gameState.flagged[i] = false;
       }
-      let minesPlaced = 0;
-      while (minesPlaced < gameState.minesCount) {
-        const r = Math.floor(Math.random() * totalCells);
-        if (gameState.board[r] !== -1) { gameState.board[r] = -1; minesPlaced++; }
+
+      let placed = 0;
+      while (placed < gameState.minesCount) {
+        const r = Math.floor(Math.random() * total);
+        if (gameState.board[r] !== -1) { gameState.board[r] = -1; placed++; }
       }
-      for (let i = 0; i < totalCells; i++) {
+
+      for (let i = 0; i < total; i++) {
         if (gameState.board[i] === -1) continue;
         let count = 0;
         getNeighbors(i).forEach(n => { if (gameState.board[n] === -1) count++; });
         gameState.board[i] = count;
       }
+
       updateBoardDisplay();
     }
 
@@ -1338,62 +1461,100 @@
       const neighbors = [];
       const row = Math.floor(index / gameState.boardSize);
       const col = index % gameState.boardSize;
-      for (let r = -1; r <= 1; r++) for (let c = -1; c <= 1; c++) {
-        if (r === 0 && c === 0) continue;
-        const nr = row + r, nc = col + c;
-        if (nr >= 0 && nr < gameState.boardSize && nc >= 0 && nc < gameState.boardSize)
-          neighbors.push(nr * gameState.boardSize + nc);
+      for (let r = -1; r <= 1; r++) {
+        for (let c = -1; c <= 1; c++) {
+          if (r === 0 && c === 0) continue;
+          const nr = row + r, nc = col + c;
+          if (nr >= 0 && nr < gameState.boardSize && nc >= 0 && nc < gameState.boardSize) {
+            neighbors.push(nr * gameState.boardSize + nc);
+          }
+        }
       }
       return neighbors;
     }
 
+    // ============================================================
+    //  CLICK SINISTRO — rispetta la modalità bandiera
+    // ============================================================
     function handleCellClick(index) {
-      if (!gameState.gameActive || !gameState.gameStarted) {
-        if (gameState.currentBet > 0) gameState.gameStarted = true; else return;
+      if (!gameState.gameActive) return;
+
+      if (gameState.flagMode) {
+        handleRightClick(index);
+        return;
       }
+      revealFromClick(index);
+    }
+
+    function revealFromClick(index) {
       if (gameState.flagged[index] || gameState.revealed[index]) return;
-      if (gameState.board[index] === -1) { revealAllMines(); gameOver(false); return; }
-      revealCell(index);
-      if (gameState.board[index] === 0) {
-        getNeighbors(index).forEach(n => {
-          if (!gameState.revealed[n] && !gameState.flagged[n]) handleCellClick(n);
-        });
+
+      if (gameState.board[index] === -1) {
+        gameState.revealed[index] = true;
+        revealAllMines();
+        gameOver();
+        return;
       }
+      revealCell(index);
       checkWinCondition();
     }
 
+    // ============================================================
+    //  CLICK DESTRO / LONG PRESS — bandiera
+    // ============================================================
     function handleRightClick(index) {
-      if (!gameState.gameActive || !gameState.gameStarted) return;
+      if (!gameState.gameActive) return;
       if (gameState.revealed[index]) return;
+
       if (gameState.flagged[index]) {
-        gameState.flagged[index] = false; gameState.flagsPlaced--;
+        gameState.flagged[index] = false;
+        gameState.flagsPlaced--;
       } else {
         if (gameState.flagsPlaced < gameState.minesCount) {
-          gameState.flagged[index] = true; gameState.flagsPlaced++;
+          gameState.flagged[index] = true;
+          gameState.flagsPlaced++;
         }
       }
-      updateBoardDisplay(); updateDisplay(); checkWinCondition();
+
+      updateBoardDisplay();
+      updateDisplay();
     }
 
+    // ============================================================
+    //  MODALITÀ BANDIERA
+    // ============================================================
     function toggleFlagMode() {
+      if (!gameState.gameActive) {
+        showStatus('Punta prima per iniziare!', 'info');
+        return;
+      }
       gameState.flagMode = !gameState.flagMode;
-      const flagBtn = document.getElementById('flagModeBtn');
+      updateFlagButton();
+      showStatus(
+        gameState.flagMode ? 'Modalità bandiera attiva 🚩' : 'Modalità normale',
+        'info'
+      );
+    }
+
+    function updateFlagButton() {
+      const btn = document.getElementById('flagModeBtn');
       if (gameState.flagMode) {
-        flagBtn.style.background = 'linear-gradient(180deg, #d92a2a 0%, #5c0c0c 100%)';
-        flagBtn.style.color = '#fff';
-        flagBtn.style.borderColor = '#d92a2a';
-        flagBtn.innerHTML = '<span class="icon">✅</span><span class="text">Modalità Normale</span>';
+        btn.classList.add('flag-active');
+        btn.innerHTML = '<span class="icon">🚩</span><span class="text">Bandiera ON</span>';
       } else {
-        flagBtn.style.background = '';
-        flagBtn.style.color = '';
-        flagBtn.style.borderColor = '';
-        flagBtn.innerHTML = '<span class="icon">🚩</span><span class="text">Modalità Bandiera</span>';
+        btn.classList.remove('flag-active');
+        btn.innerHTML = '<span class="icon">🚩</span><span class="text">Modalità Bandiera</span>';
       }
     }
 
+    // ============================================================
+    //  RIVELAZIONE
+    // ============================================================
     function revealCell(index) {
       if (gameState.revealed[index] || gameState.flagged[index]) return;
-      gameState.revealed[index] = true; updateBoardDisplay();
+      gameState.revealed[index] = true;
+      updateBoardDisplay();
+
       if (gameState.board[index] === 0) {
         getNeighbors(index).forEach(n => {
           if (!gameState.revealed[n] && !gameState.flagged[n]) revealCell(n);
@@ -1402,51 +1563,77 @@
     }
 
     function revealAllMines() {
-      for (let i = 0; i < gameState.board.length; i++)
+      for (let i = 0; i < gameState.board.length; i++) {
         if (gameState.board[i] === -1) gameState.revealed[i] = true;
+      }
       updateBoardDisplay();
     }
 
+    // ============================================================
+    //  VITTORIA — basta rivelare tutte le celle non-mina
+    // ============================================================
     function checkWinCondition() {
-      let allSafeRevealed = true, allMinesFlagged = true;
       for (let i = 0; i < gameState.board.length; i++) {
-        if (gameState.board[i] !== -1 && !gameState.revealed[i]) allSafeRevealed = false;
-        if (gameState.board[i] === -1 && !gameState.flagged[i]) allMinesFlagged = false;
-        if (gameState.board[i] !== -1 && gameState.flagged[i]) allMinesFlagged = false;
+        if (gameState.board[i] !== -1 && !gameState.revealed[i]) return;
       }
-      if (allSafeRevealed && allMinesFlagged) gameWin();
+      gameWin();
     }
 
+    // ============================================================
+    //  FINE PARTITA
+    // ============================================================
     function gameWin() {
-      stopTimer(); gameState.gameActive = false; gameState.canDouble = true;
+      stopTimer();
+      gameState.gameActive = false;
+      gameState.flagMode = false;
+      updateFlagButton();
+
       const settings = difficultySettings[gameState.difficulty];
       const baseWin = gameState.currentBet * settings.multiplier;
-      const flagBonus = gameState.minesCount * 0.5;
+
+      let allFlagged = true;
+      for (let i = 0; i < gameState.board.length; i++) {
+        if (gameState.board[i] === -1 && !gameState.flagged[i]) { allFlagged = false; break; }
+        if (gameState.board[i] !== -1 && gameState.flagged[i]) { allFlagged = false; break; }
+      }
+      const flagBonus = allFlagged ? Math.round(gameState.minesCount * 0.5) : 0;
+
       gameState.pendingWin = Math.round(baseWin + flagBonus);
-      gameState.wins++; updateStats();
-      showStatus('Hai vinto! Scegli se raddoppiare!', 'win');
+      gameState.wins++;
+      updateStats();
+
+      showStatus(allFlagged ? 'Vittoria perfetta! 🎯' : 'Hai vinto!', 'win');
       document.getElementById('winAmount').textContent = `€${gameState.pendingWin}`;
       document.getElementById('winModal').classList.remove('hidden');
-    }
-
-    function gameOver(win) {
-      stopTimer(); gameState.gameActive = false; gameState.canDouble = false;
-      if (!win) {
-        gameState.losses++; updateStats();
-        showStatus('Game Over! Hai perso!', 'lose');
-        document.getElementById('loseAmount').textContent = `-€${gameState.currentBet}`;
-        document.getElementById('loseModal').classList.remove('hidden');
-      }
       document.getElementById('cashOutBtn').disabled = true;
     }
 
+    function gameOver() {
+      stopTimer();
+      gameState.gameActive = false;
+      gameState.flagMode = false;
+      updateFlagButton();
+      gameState.losses++;
+      updateStats();
+
+      showStatus('Game Over! Hai perso!', 'lose');
+      document.getElementById('loseAmount').textContent = `-€${gameState.currentBet}`;
+      document.getElementById('loseModal').classList.remove('hidden');
+      document.getElementById('cashOutBtn').disabled = true;
+    }
+
+    // ============================================================
+    //  MODALI
+    // ============================================================
     function claimWin() {
-      gameState.balance += gameState.pendingWin;
       const won = gameState.pendingWin;
-      gameState.currentBet = 0; gameState.pendingWin = 0;
+      gameState.balance += won;
+      gameState.currentBet = 0;
+      gameState.pendingWin = 0;
       document.getElementById('winModal').classList.add('hidden');
-      updateDisplay(); showStatus(`Hai ritirato €${won}!`, 'win');
-      setTimeout(() => { createBoard(); }, 1000);
+      updateDisplay();
+      showStatus(`Hai ritirato €${won}!`, 'win');
+      setTimeout(createBoard, 1200);
     }
 
     function doubleOrNothing() {
@@ -1457,49 +1644,63 @@
     }
 
     function chooseDoubleCard(cardIndex) {
+      document.getElementById('doubleModal').classList.add('hidden');
       if (cardIndex === window.doubleCorrectCard) {
         gameState.pendingWin *= 2;
         const won = gameState.pendingWin;
         gameState.balance += won;
         gameState.currentBet = 0;
-        document.getElementById('doubleModal').classList.add('hidden');
+        gameState.pendingWin = 0;
         showStatus(`Hai raddoppiato! €${won}!`, 'win');
         updateDisplay();
-        setTimeout(() => { createBoard(); }, 1500);
+        setTimeout(createBoard, 1500);
       } else {
-        gameState.currentBet = 0; gameState.pendingWin = 0;
-        gameState.losses++; updateStats();
-        document.getElementById('doubleModal').classList.add('hidden');
+        gameState.currentBet = 0;
+        gameState.pendingWin = 0;
+        gameState.losses++;
+        updateStats();
         showStatus('Mi dispiace, hai perso il raddoppio!', 'lose');
         updateDisplay();
-        setTimeout(() => { createBoard(); }, 1500);
+        setTimeout(createBoard, 1500);
       }
     }
 
     function cashOut() {
       if (!gameState.gameActive) return;
-      stopTimer(); gameState.gameActive = false;
+      stopTimer();
+      gameState.gameActive = false;
+      gameState.flagMode = false;
+      updateFlagButton();
+
       let revealedCount = 0;
-      for (let i = 0; i < gameState.revealed.length; i++)
+      for (let i = 0; i < gameState.revealed.length; i++) {
         if (gameState.revealed[i]) revealedCount++;
-      const totalSafeCells = gameState.boardSize * gameState.boardSize - gameState.minesCount;
-      const completionPercentage = revealedCount / totalSafeCells;
-      const partialWin = Math.round(gameState.currentBet * completionPercentage * 0.8);
+      }
+      const totalSafe = gameState.boardSize * gameState.boardSize - gameState.minesCount;
+      const partialWin = Math.round(gameState.currentBet * (revealedCount / totalSafe) * 0.8);
+
       if (partialWin > 0) {
         gameState.balance += partialWin;
         showStatus(`Hai incassato €${partialWin}!`, 'win');
       } else {
         showStatus('Nessuna vincita da incassare!', 'info');
       }
-      gameState.currentBet = 0; updateDisplay();
+
+      gameState.currentBet = 0;
+      updateDisplay();
       document.getElementById('cashOutBtn').disabled = true;
     }
 
     function newGame() {
+      if (gameState.gameActive) {
+        cashOut();
+      }
       stopTimer();
-      gameState.currentBet = 0; gameState.pendingWin = 0;
-      gameState.gameActive = false; gameState.gameStarted = false; gameState.canDouble = false;
-      createBoard(); updateDisplay();
+      gameState.currentBet = 0;
+      gameState.pendingWin = 0;
+      gameState.gameActive = false;
+      gameState.flagMode = false;
+      createBoard();
       showStatus('Nuova partita! Punta per iniziare!', 'info');
     }
 
@@ -1508,21 +1709,27 @@
       newGame();
     }
 
+    // ============================================================
+    //  RENDER
+    // ============================================================
     function updateBoardDisplay() {
       document.querySelectorAll('.cell').forEach(cell => {
         const index = parseInt(cell.dataset.index);
         cell.className = 'cell';
         cell.textContent = '';
+
         if (gameState.revealed[index]) {
           cell.classList.add('revealed');
           if (gameState.board[index] === -1) {
-            cell.classList.add('mine'); cell.innerHTML = '💣';
+            cell.classList.add('mine');
+            cell.textContent = '💣';
           } else if (gameState.board[index] > 0) {
             cell.classList.add(`cell-number-${gameState.board[index]}`);
             cell.textContent = gameState.board[index];
           }
         } else if (gameState.flagged[index]) {
-          cell.classList.add('flagged'); cell.innerHTML = '🚩';
+          cell.classList.add('flagged');
+          cell.textContent = '🚩';
         }
       });
     }
@@ -1533,18 +1740,19 @@
       document.getElementById('minesCount').textContent = gameState.minesCount;
       document.getElementById('flagsCount').textContent = gameState.flagsPlaced;
       document.getElementById('timeDisplay').textContent = gameState.time;
-      const settings = difficultySettings[gameState.difficulty];
-      document.getElementById('winMultiplier').textContent = `${settings.multiplier}x`;
-      const betInput = document.getElementById('betInput');
-      if (gameState.currentBet > 0) betInput.value = gameState.currentBet;
+      const s = difficultySettings[gameState.difficulty];
+      document.getElementById('winMultiplier').textContent = `${s.multiplier}x`;
+      if (gameState.currentBet > 0) {
+        document.getElementById('betInput').value = gameState.currentBet;
+      }
     }
 
     function updateStats() {
-      const totalGames = gameState.wins + gameState.losses;
-      const winRate = totalGames > 0 ? Math.round((gameState.wins / totalGames) * 100) : 0;
+      const total = gameState.wins + gameState.losses;
+      const rate = total > 0 ? Math.round((gameState.wins / total) * 100) : 0;
       document.getElementById('winsCount').textContent = gameState.wins;
       document.getElementById('lossesCount').textContent = gameState.losses;
-      document.getElementById('winRate').textContent = `${winRate}%`;
+      document.getElementById('winRate').textContent = `${rate}%`;
       saveToStorage();
     }
 
@@ -1554,30 +1762,31 @@
       el.className = `status-message status-${type}`;
     }
 
+    // ============================================================
+    //  PULSANTI PUNTATA
+    // ============================================================
     function increaseBet() {
-      const betInput = document.getElementById('betInput');
-      let bet = parseInt(betInput.value) || 0;
-      bet += 10;
+      const input = document.getElementById('betInput');
+      let bet = (parseInt(input.value) || 0) + 10;
       if (bet > gameState.balance) bet = gameState.balance;
-      betInput.value = bet;
+      input.value = bet;
     }
-
     function decreaseBet() {
-      const betInput = document.getElementById('betInput');
-      let bet = parseInt(betInput.value) || 0;
-      bet -= 10;
+      const input = document.getElementById('betInput');
+      let bet = (parseInt(input.value) || 0) - 10;
       if (bet < 1) bet = 1;
-      betInput.value = bet;
+      input.value = bet;
     }
-
     function doubleBet() {
-      const betInput = document.getElementById('betInput');
-      let bet = parseInt(betInput.value) || 0;
-      bet *= 2;
+      const input = document.getElementById('betInput');
+      let bet = (parseInt(input.value) || 0) * 2;
       if (bet > gameState.balance) bet = gameState.balance;
-      betInput.value = bet;
+      input.value = bet;
     }
 
+    // ============================================================
+    //  TIMER
+    // ============================================================
     function startTimer() {
       stopTimer();
       gameState.timer = setInterval(() => {
@@ -1585,30 +1794,74 @@
         document.getElementById('timeDisplay').textContent = gameState.time;
       }, 1000);
     }
-
     function stopTimer() {
       if (gameState.timer) { clearInterval(gameState.timer); gameState.timer = null; }
     }
 
+    // ============================================================
+    //  STORAGE
+    // ============================================================
     function saveToStorage() {
-      localStorage.setItem('minesweeperCasino', JSON.stringify({
-        balance: gameState.balance, wins: gameState.wins, losses: gameState.losses
-      }));
+      try {
+        localStorage.setItem('minesweeperCasino', JSON.stringify({
+          balance: gameState.balance,
+          wins: gameState.wins,
+          losses: gameState.losses
+        }));
+      } catch (e) {}
     }
-
     function loadFromStorage() {
-      const saveData = localStorage.getItem('minesweeperCasino');
-      if (saveData) {
-        try {
-          const data = JSON.parse(saveData);
-          gameState.balance = data.balance || 1000;
-          gameState.wins = data.wins || 0;
-          gameState.losses = data.losses || 0;
-          updateStats(); updateDisplay();
-        } catch (e) { console.log('Error loading save data:', e); }
-      }
+      try {
+        const data = JSON.parse(localStorage.getItem('minesweeperCasino') || 'null');
+        if (data) {
+          gameState.balance = data.balance ?? 1000;
+          gameState.wins = data.wins ?? 0;
+          gameState.losses = data.losses ?? 0;
+        }
+      } catch (e) { console.log('Load error:', e); }
     }
 
+    // ============================================================
+    //  TOUCH — event delegation sul board
+    //  Tap breve  → azione normale (rivela o flag in base alla modalità)
+    //  Long press → azione opposta
+    // ============================================================
+    function setupBoardTouchHandlers() {
+      const board = document.getElementById('gameBoard');
+      let longPressTimer = null;
+      let longPressFired = false;
+
+      board.addEventListener('touchstart', (e) => {
+        const cell = e.target.closest('.cell');
+        if (!cell) return;
+        const index = parseInt(cell.dataset.index);
+        longPressFired = false;
+
+        longPressTimer = setTimeout(() => {
+          longPressFired = true;
+          if (gameState.flagMode) {
+            revealFromClick(index);
+          } else {
+            handleRightClick(index);
+          }
+        }, 450);
+      }, { passive: true });
+
+      board.addEventListener('touchend', (e) => {
+        clearTimeout(longPressTimer);
+        if (longPressFired) {
+          e.preventDefault();
+          longPressFired = false;
+        }
+      });
+
+      board.addEventListener('touchmove', () => clearTimeout(longPressTimer), { passive: true });
+      board.addEventListener('touchcancel', () => clearTimeout(longPressTimer));
+    }
+
+    // ============================================================
+    //  KEYBOARD
+    // ============================================================
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Space') { e.preventDefault(); toggleFlagMode(); }
       if (e.code === 'Escape') {
@@ -1616,42 +1869,21 @@
       }
     });
 
-    let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
-    document.querySelectorAll('.cell').forEach(cell => {
-      cell.addEventListener('touchstart', (e) => {
-        touchStartX = e.changedTouches[0].clientX;
-        touchStartY = e.changedTouches[0].clientY;
-        touchStartTime = Date.now();
-      });
-      cell.addEventListener('touchend', (e) => {
-        if (!touchStartX || !touchStartY) return;
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
-        const touchDuration = Date.now() - touchStartTime;
-        const dx = Math.abs(touchEndX - touchStartX);
-        const dy = Math.abs(touchEndY - touchStartY);
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const index = parseInt(cell.dataset.index);
-        if (touchDuration > 500 || distance < 10) handleRightClick(index);
-        else handleCellClick(index);
-        touchStartX = 0; touchStartY = 0; touchStartTime = 0;
-      });
-    });
-
+    // ============================================================
+    //  VARIE
+    // ============================================================
     document.addEventListener('contextmenu', (e) => {
-      if (e.target.classList.contains('cell')) e.preventDefault();
+      if (e.target.closest('.cell')) e.preventDefault();
     });
-
-    window.addEventListener('load', initGame);
 
     document.addEventListener('touchmove', (e) => {
       if (e.scale !== 1) e.preventDefault();
     }, { passive: false });
 
-    document.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.98)'; });
-      btn.addEventListener('touchend', () => { btn.style.transform = ''; });
-    });
+    // ============================================================
+    //  BOOT
+    // ============================================================
+    window.addEventListener('load', initGame);
   </script>
 </body>
 </html>

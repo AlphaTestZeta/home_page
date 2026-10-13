@@ -43,8 +43,7 @@
     color: var(--cream);
     background: var(--ink);
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    display: flex; flex-direction: column;
     letter-spacing: 0.01em;
     position: relative;
   }
@@ -88,85 +87,59 @@
   .header::after { bottom: -1px; height: 1px; }
 
   .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    max-width: 1200px;
-    margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; max-width: 1200px; margin: 0 auto;
   }
-
   .logo {
     font-family: 'Cinzel', serif;
-    font-weight: 900;
-    font-size: 1.35rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-weight: 900; font-size: 1.35rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
     display: flex; align-items: center; gap: 10px;
     background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 50%, var(--gold-lo) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
+    -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 12px rgba(212,175,55,0.35));
     white-space: nowrap;
   }
   .logo::before {
-    content: '♠';
-    font-size: 1.4rem;
-    -webkit-text-fill-color: var(--gold);
-    color: var(--gold);
+    content: '♠'; font-size: 1.4rem;
+    -webkit-text-fill-color: var(--gold); color: var(--gold);
     animation: pulse 2.4s ease-in-out infinite;
   }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }
 
   .user-info { display: flex; gap: 8px; }
-
   .balance, .bet-info {
-    position: relative;
-    min-width: 96px;
-    padding: 6px 14px;
-    text-align: center;
+    position: relative; min-width: 96px; padding: 6px 14px; text-align: center;
     background: linear-gradient(180deg, #1a1a1a 0%, #060606 100%);
     border: 1px solid var(--gold);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 0 12px rgba(0,0,0,0.6), 0 2px 0 #000;
   }
   .balance::before, .bet-info::before {
-    content: '';
-    position: absolute; inset: 3px;
-    border: 1px solid rgba(212,175,55,0.25);
-    pointer-events: none;
+    content: ''; position: absolute; inset: 3px;
+    border: 1px solid rgba(212,175,55,0.25); pointer-events: none;
   }
   .balance-value {
-    font-family: 'Cinzel', serif;
-    font-weight: 700; font-size: 1.15rem;
-    color: var(--gold-hi);
-    line-height: 1.1;
+    font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.15rem;
+    color: var(--gold-hi); line-height: 1.1;
     text-shadow: 0 0 10px rgba(212,175,55,0.5);
   }
   .balance-label {
-    font-size: 0.58rem; font-weight: 600;
-    color: var(--gold);
+    font-size: 0.58rem; font-weight: 600; color: var(--gold);
     letter-spacing: 0.22em; text-transform: uppercase;
     margin-top: 2px; opacity: 0.9;
   }
 
   /* ===== MAIN ===== */
   .main {
-    flex: 1;
-    overflow-y: auto; overflow-x: hidden;
-    display: flex; flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    padding: 20px 16px 40px;
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 14px; padding: 20px 16px 40px;
   }
-
   .game-title {
-    font-family: 'Cinzel', serif;
-    font-weight: 900;
+    font-family: 'Cinzel', serif; font-weight: 900;
     font-size: clamp(1.4rem, 5vw, 2rem);
-    letter-spacing: 0.05em;
-    text-align: center;
-    text-transform: uppercase;
+    letter-spacing: 0.05em; text-align: center; text-transform: uppercase;
     background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 55%, var(--gold-lo) 100%);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -182,14 +155,10 @@
 
   /* ===== ACTION BUTTONS ===== */
   .action-btn {
-    padding: 12px 8px;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 4px;
-    font-family: 'Barlow', sans-serif;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    padding: 12px 8px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    font-family: 'Barlow', sans-serif; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
     cursor: pointer;
     border: 1px solid var(--gold);
     background: linear-gradient(180deg, #1a1a1a 0%, #060606 100%);
@@ -216,19 +185,16 @@
 
   .action-btn.new-game {
     background: linear-gradient(180deg, var(--wine-hi) 0%, var(--wine-lo) 100%);
-    border-color: var(--gold);
-    color: var(--gold-hi);
+    border-color: var(--gold); color: var(--gold-hi);
   }
   .action-btn.new-game:hover:not(:disabled) {
     background: linear-gradient(180deg, #a52040 0%, var(--wine) 100%);
     color: #fff; border-color: var(--gold-hi);
     box-shadow: 0 2px 0 #000, 0 0 18px rgba(143,26,48,0.65);
   }
-
   .action-btn.cash-out {
     background: linear-gradient(180deg, #3a0a0a 0%, #1a0404 100%);
-    border-color: var(--red);
-    color: var(--red-hi);
+    border-color: var(--red); color: var(--red-hi);
   }
   .action-btn.cash-out:hover:not(:disabled) {
     background: linear-gradient(180deg, #6b1212 0%, #2a0606 100%);
@@ -259,12 +225,9 @@
   .bet-input-container { flex: 1; position: relative; display: flex; }
 
   .bet-input {
-    width: 100%;
-    padding: 13px 44px 13px 18px;
-    font-family: 'Cinzel', serif;
-    font-size: 1.15rem; font-weight: 700;
-    letter-spacing: 0.05em;
-    color: var(--gold-hi);
+    width: 100%; padding: 13px 44px 13px 18px;
+    font-family: 'Cinzel', serif; font-size: 1.15rem; font-weight: 700;
+    letter-spacing: 0.05em; color: var(--gold-hi);
     background: linear-gradient(180deg, #0e0e0e 0%, #050505 100%);
     border: 1px solid var(--gold);
     outline: none;
@@ -294,8 +257,8 @@
   .bet-buttons { display: flex; gap: 8px; }
 
   .bet-btn {
-    font-family: 'Barlow', sans-serif;
-    font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    font-family: 'Barlow', sans-serif; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
     cursor: pointer;
     border: 1px solid var(--gold);
     background: linear-gradient(180deg, #1a1a1a 0%, #060606 100%);
@@ -344,23 +307,18 @@
 
   /* ===== DIFFICULTY ===== */
   .difficulty-selector {
-    display: flex;
-    border: 1px solid var(--gold);
+    display: flex; border: 1px solid var(--gold);
     background: linear-gradient(180deg, #0a0a0a 0%, #030303 100%);
     box-shadow: 0 2px 0 #000;
   }
   .difficulty-btn {
     flex: 1; padding: 11px 8px;
-    font-family: 'Barlow', sans-serif;
-    font-weight: 700; font-size: 0.78rem;
-    letter-spacing: 0.12em; text-transform: uppercase;
-    cursor: pointer;
-    border: none;
+    font-family: 'Barlow', sans-serif; font-weight: 700;
+    font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
+    cursor: pointer; border: none;
     border-right: 1px solid var(--gold-line);
-    background: transparent;
-    color: var(--cream-soft);
-    transition: background 0.2s, color 0.2s;
-    user-select: none;
+    background: transparent; color: var(--cream-soft);
+    transition: background 0.2s, color 0.2s; user-select: none;
   }
   .difficulty-btn:last-child { border-right: none; }
   .difficulty-btn.active {
@@ -387,8 +345,7 @@
   .info-value {
     font-family: 'Cinzel', serif; font-weight: 700;
     font-size: 1.35rem; color: var(--gold-hi);
-    line-height: 1.1;
-    text-shadow: 0 0 10px rgba(212,175,55,0.4);
+    line-height: 1.1; text-shadow: 0 0 10px rgba(212,175,55,0.4);
   }
   .info-label {
     font-size: 0.6rem; color: var(--gold);
@@ -397,19 +354,14 @@
   }
 
   /* ===== STATUS ===== */
-  .game-status {
-    min-height: 46px;
-    display: flex; align-items: center; justify-content: center;
-  }
+  .game-status { min-height: 46px; display: flex; align-items: center; justify-content: center; }
   .status-message {
-    display: inline-block;
-    padding: 10px 22px;
+    display: inline-block; padding: 10px 22px;
     font-weight: 600; font-size: 0.82rem;
     letter-spacing: 0.06em; text-transform: uppercase; text-align: center;
     border: 1px solid var(--gold);
     background: linear-gradient(180deg, #0e0e0e 0%, #050505 100%);
-    color: var(--gold);
-    animation: slideIn 0.35s ease;
+    color: var(--gold); animation: slideIn 0.35s ease;
   }
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(-8px); }
@@ -498,11 +450,8 @@
     display: flex; align-items: center; justify-content: center;
     font-family: 'Cinzel', serif; font-weight: 700;
     font-size: 0.95rem;
-    cursor: pointer;
-    position: relative;
-    color: var(--gold-hi);
-    overflow: hidden;
-    user-select: none;
+    cursor: pointer; position: relative;
+    color: var(--gold-hi); overflow: hidden; user-select: none;
     background: linear-gradient(180deg, #232323 0%, #0b0b0b 100%);
     border: 1px solid var(--gold-line);
     box-shadow:
@@ -544,8 +493,7 @@
 
   .cell.mine {
     background: radial-gradient(circle at center, var(--red-hi) 0%, var(--red-lo) 100%);
-    border-color: var(--gold);
-    color: #fff;
+    border-color: var(--gold); color: #fff;
     box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
   }
 
@@ -553,15 +501,6 @@
     background: linear-gradient(180deg, var(--gold) 0%, var(--gold-lo) 100%);
     border-color: var(--gold-hi);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 0 10px rgba(212,175,55,0.4);
-  }
-
-  /* Pulsazione sulle celle durante il chord */
-  .cell.chord-flash {
-    animation: chordFlash 0.35s ease;
-  }
-  @keyframes chordFlash {
-    0% { background: linear-gradient(180deg, #444 0%, #1a1a1a 100%); }
-    100% { background: linear-gradient(180deg, #0a0a0a 0%, #050505 100%); }
   }
 
   .cell-number-1 { color: #5caeff; }
@@ -584,8 +523,7 @@
   .stat-value {
     font-family: 'Cinzel', serif; font-weight: 700;
     font-size: 1.15rem; color: var(--gold-hi);
-    line-height: 1.1;
-    text-shadow: 0 0 8px rgba(212,175,55,0.35);
+    line-height: 1.1; text-shadow: 0 0 8px rgba(212,175,55,0.35);
   }
   .stat-label {
     font-size: 0.55rem; color: var(--gold);
@@ -690,9 +628,8 @@
 
   .modal-btn {
     padding: 12px 24px;
-    font-family: 'Barlow', sans-serif;
-    font-weight: 700; font-size: 0.8rem;
-    letter-spacing: 0.12em; text-transform: uppercase;
+    font-family: 'Barlow', sans-serif; font-weight: 700;
+    font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase;
     cursor: pointer;
     border: 1px solid var(--gold);
     background: linear-gradient(180deg, #1a1a1a 0%, #060606 100%);
@@ -754,8 +691,18 @@
     box-shadow:
       inset 0 0 0 3px #050505,
       inset 0 0 0 4px var(--gold-line);
-    transition: all 0.25s ease;
+    transition: all 0.3s ease;
+    animation: cardDeal 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
+
+  #doubleCard0 { animation-delay: 0.05s; }
+  #doubleCard1 { animation-delay: 0.15s; }
+
+  @keyframes cardDeal {
+    from { opacity: 0; transform: translateY(-20px) rotate(-8deg); }
+    to   { opacity: 1; transform: translateY(0) rotate(0deg); }
+  }
+
   #doubleCard0:hover:not(:disabled), #doubleCard1:hover:not(:disabled) {
     color: var(--gold-hi);
     background:
@@ -780,7 +727,15 @@
       inset 0 0 0 4px rgba(255,255,255,0.4),
       0 0 30px rgba(53,196,110,0.8);
     transform: scale(1.05);
+    animation: cardWinPulse 0.5s ease;
   }
+
+  @keyframes cardWinPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+    100% { transform: scale(1.05); }
+  }
+
   #doubleCard0.lose-reveal, #doubleCard1.lose-reveal {
     background:
       repeating-linear-gradient(45deg, rgba(0,0,0,0.2) 0 4px, transparent 4px 8px),
@@ -790,10 +745,7 @@
     box-shadow:
       inset 0 0 0 3px #2a0505,
       inset 0 0 0 4px rgba(255,255,255,0.3);
-    opacity: 0.6;
-  }
-  #doubleCard0.dim, #doubleCard1.dim {
-    opacity: 0.4;
+    opacity: 0.55;
   }
 
   #doubleResult {
@@ -993,7 +945,6 @@
     Shiny Carnival - Campo Minato Casinò
   </footer>
 
-  <!-- WIN MODAL -->
   <div class="modal-overlay hidden" id="winModal">
     <div class="modal">
       <div class="modal-title">🎉 Vincita! 🎉</div>
@@ -1006,7 +957,6 @@
     </div>
   </div>
 
-  <!-- LOSE MODAL -->
   <div class="modal-overlay hidden" id="loseModal">
     <div class="modal">
       <div class="modal-title">💥 Game Over 💥</div>
@@ -1018,7 +968,6 @@
     </div>
   </div>
 
-  <!-- DOUBLE MODAL -->
   <div class="modal-overlay hidden" id="doubleModal">
     <div class="modal">
       <div class="modal-title" id="doubleTitle">❓ Raddoppia o Perdi ❓</div>
@@ -1044,7 +993,7 @@
       revealed: [],
       flagged: [],
       gameActive: false,
-      minesPlaced: false,   // <-- nuovo: le mine si piazzano al primo click
+      minesPlaced: false,
       flagsPlaced: 0,
       time: 0,
       timer: null,
@@ -1060,6 +1009,19 @@
       medium: { size: 10, mines: 10, multiplier: 2 },
       hard:   { size: 12, mines: 15, multiplier: 3 }
     };
+
+    // ============================================================
+    //  RANDOM SICURO — usa crypto.getRandomValues se disponibile
+    //  per garantire casualità non prevedibile, con fallback.
+    // ============================================================
+    function randomBit() {
+      if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+        const a = new Uint8Array(1);
+        window.crypto.getRandomValues(a);
+        return a[0] & 1;
+      }
+      return Math.random() < 0.5 ? 0 : 1;
+    }
 
     // ============================================================
     //  INIT
@@ -1128,7 +1090,7 @@
     }
 
     // ============================================================
-    //  PUNTATA — non piazziamo più le mine subito!
+    //  PUNTATA
     // ============================================================
     function placeBet() {
       if (gameState.gameActive) {
@@ -1144,7 +1106,7 @@
       gameState.currentBet = betAmount;
       gameState.balance -= betAmount;
       gameState.gameActive = true;
-      gameState.minesPlaced = false;   // <-- le mine si piazzano al primo click
+      gameState.minesPlaced = false;
       gameState.time = 0;
       gameState.flagsPlaced = 0;
 
@@ -1168,7 +1130,6 @@
         if (!safeZone.has(i)) candidates.push(i);
       }
 
-      // Fisher-Yates shuffle
       for (let i = candidates.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
@@ -1178,7 +1139,6 @@
         gameState.board[candidates[k]] = -1;
       }
 
-      // Calcola i numeri
       for (let i = 0; i < total; i++) {
         if (gameState.board[i] === -1) continue;
         let count = 0;
@@ -1215,17 +1175,14 @@
     function revealFromClick(index) {
       if (gameState.flagged[index] || gameState.revealed[index]) return;
 
-      // PRIMO CLICK: piazza le mine evitando questa cella
       if (!gameState.minesPlaced) {
         placeMines(index);
         gameState.minesPlaced = true;
-        // Sicurezza: se per qualche motivo la cella cliccata fosse una mina, spostala
         if (gameState.board[index] === -1) {
           for (let i = 0; i < gameState.board.length; i++) {
             if (gameState.board[i] !== -1) {
               gameState.board[i] = -1;
               gameState.board[index] = 0;
-              // Ricalcola i numeri
               for (let k = 0; k < gameState.board.length; k++) {
                 if (gameState.board[k] === -1) continue;
                 let c = 0;
@@ -1271,9 +1228,7 @@
     }
 
     // ============================================================
-    //  CHORD — doppio click / doppio tap su cella numerata
-    //  Se il numero di bandierine attorno == numero mostrato,
-    //  apre tutte le celle non flaggate attorno.
+    //  CHORD — doppio click / doppio tap
     // ============================================================
     function chordCell(index) {
       if (!gameState.gameActive || !gameState.minesPlaced) return;
@@ -1426,31 +1381,45 @@
       setTimeout(createBoard, 1200);
     }
 
+    // ============================================================
+    //  RADDOPPIA O PERDI
+    //  Reset TOTALE dello stato del modale (classi, testi,
+    //  stili inline, disabled) e scelta della carta corretta
+    //  con randomBit() (crypto).
+    // ============================================================
     function doubleOrNothing() {
       document.getElementById('winModal').classList.add('hidden');
 
-      // Reset completo del modale
       const title = document.getElementById('doubleTitle');
       const message = document.getElementById('doubleMessage');
       const card0 = document.getElementById('doubleCard0');
       const card1 = document.getElementById('doubleCard1');
       const result = document.getElementById('doubleResult');
 
+      // --- Reset testo
       title.textContent = '❓ Raddoppia o Perdi ❓';
       title.className = 'modal-title';
       message.textContent = 'Scegli una carta per raddoppiare la vincita o perdere tutto!';
       message.classList.remove('hidden');
-      card0.textContent = '?';
-      card1.textContent = '?';
-      card0.disabled = false;
-      card1.disabled = false;
-      card0.className = 'modal-btn primary';
-      card1.className = 'modal-btn primary';
       result.classList.add('hidden');
       result.innerHTML = '';
 
+      // --- Reset carte: classi, testi, disabled, stili inline
+      [card0, card1].forEach(c => {
+        c.className = 'modal-btn primary';
+        c.textContent = '?';
+        c.disabled = false;
+        // Pulisce QUALSIASI stile inline residuo da partite precedenti
+        c.removeAttribute('style');
+      });
+
+      // --- Sceglie la carta corretta (0 = sinistra, 1 = destra)
+      window.doubleCorrectCard = randomBit();
+
+      // Debug: rimuovi il commento per vedere in console cosa esce
+      // console.log('Carta corretta:', window.doubleCorrectCard);
+
       document.getElementById('doubleModal').classList.remove('hidden');
-      window.doubleCorrectCard = Math.floor(Math.random() * 2);
     }
 
     function chooseDoubleCard(cardIndex) {
@@ -1463,11 +1432,11 @@
       const card1 = document.getElementById('doubleCard1');
       const result = document.getElementById('doubleResult');
 
-      // Disabilita entrambi
+      // Disabilita entrambe
       card0.disabled = true;
       card1.disabled = true;
 
-      // Rivela entrambe le carte
+      // Rivela il contenuto reale di entrambe le carte
       card0.textContent = correct === 0 ? '✔' : '✗';
       card1.textContent = correct === 1 ? '✔' : '✗';
 
@@ -1479,19 +1448,12 @@
         card0.classList.add('lose-reveal');
       }
 
-      // Evidenzia la scelta del giocatore
-      const chosen = cardIndex === 0 ? card0 : card1;
-      // Small pulse effect già garantito dalle classi
-      chosen.style.outline = '3px solid #fff';
-      chosen.style.outlineOffset = '4px';
-
-      // Prepara messaggio risultato
       if (won) {
         const amount = gameState.pendingWin * 2;
         title.textContent = '🎉 Hai Vinto! 🎉';
         title.className = 'modal-title win-title';
         message.classList.add('hidden');
-        result.innerHTML = `<div class="result-win">€${amount}</div>`;
+        result.innerHTML = `<div class="result-win">+€${amount}</div>`;
         result.classList.remove('hidden');
 
         setTimeout(() => {
@@ -1525,9 +1487,23 @@
     }
 
     function closeDoubleModal() {
+      // Reset completo per evitare stati residui
+      const card0 = document.getElementById('doubleCard0');
+      const card1 = document.getElementById('doubleCard1');
+      [card0, card1].forEach(c => {
+        c.className = 'modal-btn primary';
+        c.textContent = '?';
+        c.disabled = false;
+        c.removeAttribute('style');
+      });
+      document.getElementById('doubleResult').classList.add('hidden');
+      document.getElementById('doubleResult').innerHTML = '';
       document.getElementById('doubleModal').classList.add('hidden');
     }
 
+    // ============================================================
+    //  ALTRI BOTTONI
+    // ============================================================
     function cashOut() {
       if (!gameState.gameActive) return;
       stopTimer();
@@ -1722,7 +1698,6 @@
         const index = parseInt(cell.dataset.index);
         const now = Date.now();
 
-        // Doppio tap su cella rivelata numerata → chord
         if (now - lastTapTime < 350 && lastTapIndex === index && gameState.revealed[index]) {
           e.preventDefault();
           lastTapIndex = -1;
@@ -1745,8 +1720,6 @@
     document.addEventListener('keydown', (e) => {
       if (e.code === 'Space') { e.preventDefault(); toggleFlagMode(); }
       if (e.code === 'Escape') {
-        // Solo winModal e loseModal possono essere chiusi con ESC,
-        // il doubleModal deve completare il suo flusso.
         document.getElementById('winModal').classList.add('hidden');
         document.getElementById('loseModal').classList.add('hidden');
       }

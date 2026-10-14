@@ -10,7 +10,6 @@
 <style>
   *, *::before, *::after {
     margin: 0; padding: 0; box-sizing: border-box;
-    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
 
@@ -42,8 +41,8 @@
     font-weight: 500;
     color: var(--cream);
     background: var(--ink);
-    min-height: 100vh;
-    display: flex; flex-direction: column;
+    display: flex;
+    flex-direction: column;
     letter-spacing: 0.01em;
     position: relative;
   }
@@ -72,6 +71,7 @@
 
   /* ===== HEADER ===== */
   .header {
+    flex-shrink: 0;
     position: relative;
     padding: 14px 18px;
     background: linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
@@ -130,9 +130,14 @@
     margin-top: 2px; opacity: 0.9;
   }
 
-  /* ===== MAIN ===== */
+  /* ===== MAIN (scrollabile) ===== */
   .main {
-    flex: 1; overflow-y: auto; overflow-x: hidden;
+    flex: 1;
+    min-height: 0;             /* ⬅ FIX chiave: permette al flex item di scrollare */
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     display: flex; flex-direction: column; align-items: center;
     gap: 14px; padding: 20px 16px 40px;
   }
@@ -145,12 +150,14 @@
     -webkit-text-fill-color: transparent;
     filter: drop-shadow(0 0 14px rgba(212,175,55,0.35)) drop-shadow(0 2px 0 rgba(0,0,0,0.8));
     margin-bottom: 2px; padding: 0 8px;
+    flex-shrink: 0;
   }
 
   .top-actions, .flag-row, .bet-controls, .difficulty-selector,
   .game-info, .game-status, .multiplier-display,
   .game-board-container, .stats {
     width: 100%; max-width: 520px;
+    flex-shrink: 0;
   }
 
   /* ===== ACTION BUTTONS ===== */
@@ -167,6 +174,7 @@
     position: relative;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 0 #000;
     user-select: none;
+    touch-action: manipulation;
   }
   .action-btn:hover:not(:disabled) {
     color: var(--gold-hi); border-color: var(--gold-hi);
@@ -266,6 +274,7 @@
     transition: transform 0.12s, box-shadow 0.2s, background 0.2s, color 0.2s;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 0 #000;
     user-select: none;
+    touch-action: manipulation;
     min-width: 52px; padding: 12px 14px; font-size: 1rem;
   }
   .bet-btn:hover:not(:disabled) {
@@ -319,6 +328,7 @@
     border-right: 1px solid var(--gold-line);
     background: transparent; color: var(--cream-soft);
     transition: background 0.2s, color 0.2s; user-select: none;
+    touch-action: manipulation;
   }
   .difficulty-btn:last-child { border-right: none; }
   .difficulty-btn.active {
@@ -459,6 +469,7 @@
       inset 0 -1px 0 rgba(0,0,0,0.6),
       0 1px 0 rgba(0,0,0,0.9);
     transition: background 0.15s, box-shadow 0.2s, border-color 0.2s, transform 0.12s;
+    touch-action: manipulation;
   }
   .cell::before {
     content: ''; position: absolute; inset: 3px;
@@ -533,6 +544,7 @@
 
   /* ===== FOOTER ===== */
   .footer {
+    flex-shrink: 0;
     padding: 10px 16px; text-align: center;
     font-family: 'Cinzel', serif;
     font-size: 0.7rem; letter-spacing: 0.25em;
@@ -637,6 +649,7 @@
     transition: transform 0.12s, box-shadow 0.2s, background 0.2s, color 0.2s;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 0 #000;
     user-select: none;
+    touch-action: manipulation;
   }
   .modal-btn:hover:not(:disabled) {
     color: var(--gold-hi); border-color: var(--gold-hi);
@@ -667,7 +680,6 @@
     color: #fff; border-color: var(--red-hi);
   }
 
-  /* Carte "Raddoppia o Perdi" */
   .double-cards {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -982,7 +994,7 @@
 
   <script>
     // ============================================================
-    //  STATE
+    //  STATE — niente più localStorage: si riparte sempre da 1000
     // ============================================================
     const gameState = {
       balance: 1000,
@@ -1011,8 +1023,7 @@
     };
 
     // ============================================================
-    //  RANDOM SICURO — usa crypto.getRandomValues se disponibile
-    //  per garantire casualità non prevedibile, con fallback.
+    //  RANDOM SICURO — crypto.getRandomValues con fallback
     // ============================================================
     function randomBit() {
       if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
@@ -1029,7 +1040,6 @@
     function initGame() {
       createBoard();
       setupBoardTouchHandlers();
-      loadFromStorage();
       updateDisplay();
       updateStats();
     }
@@ -1117,7 +1127,7 @@
     }
 
     // ============================================================
-    //  PIAZZA MINE — evita la prima cella cliccata e le sue 8 vicine
+    //  PIAZZA MINE
     // ============================================================
     function placeMines(safeIndex) {
       const total = gameState.boardSize * gameState.boardSize;
@@ -1228,7 +1238,7 @@
     }
 
     // ============================================================
-    //  CHORD — doppio click / doppio tap
+    //  CHORD
     // ============================================================
     function chordCell(index) {
       if (!gameState.gameActive || !gameState.minesPlaced) return;
@@ -1381,12 +1391,6 @@
       setTimeout(createBoard, 1200);
     }
 
-    // ============================================================
-    //  RADDOPPIA O PERDI
-    //  Reset TOTALE dello stato del modale (classi, testi,
-    //  stili inline, disabled) e scelta della carta corretta
-    //  con randomBit() (crypto).
-    // ============================================================
     function doubleOrNothing() {
       document.getElementById('winModal').classList.add('hidden');
 
@@ -1396,7 +1400,6 @@
       const card1 = document.getElementById('doubleCard1');
       const result = document.getElementById('doubleResult');
 
-      // --- Reset testo
       title.textContent = '❓ Raddoppia o Perdi ❓';
       title.className = 'modal-title';
       message.textContent = 'Scegli una carta per raddoppiare la vincita o perdere tutto!';
@@ -1404,20 +1407,14 @@
       result.classList.add('hidden');
       result.innerHTML = '';
 
-      // --- Reset carte: classi, testi, disabled, stili inline
       [card0, card1].forEach(c => {
         c.className = 'modal-btn primary';
         c.textContent = '?';
         c.disabled = false;
-        // Pulisce QUALSIASI stile inline residuo da partite precedenti
         c.removeAttribute('style');
       });
 
-      // --- Sceglie la carta corretta (0 = sinistra, 1 = destra)
       window.doubleCorrectCard = randomBit();
-
-      // Debug: rimuovi il commento per vedere in console cosa esce
-      // console.log('Carta corretta:', window.doubleCorrectCard);
 
       document.getElementById('doubleModal').classList.remove('hidden');
     }
@@ -1432,11 +1429,9 @@
       const card1 = document.getElementById('doubleCard1');
       const result = document.getElementById('doubleResult');
 
-      // Disabilita entrambe
       card0.disabled = true;
       card1.disabled = true;
 
-      // Rivela il contenuto reale di entrambe le carte
       card0.textContent = correct === 0 ? '✔' : '✗';
       card1.textContent = correct === 1 ? '✔' : '✗';
 
@@ -1487,7 +1482,6 @@
     }
 
     function closeDoubleModal() {
-      // Reset completo per evitare stati residui
       const card0 = document.getElementById('doubleCard0');
       const card1 = document.getElementById('doubleCard1');
       [card0, card1].forEach(c => {
@@ -1590,7 +1584,6 @@
       document.getElementById('winsCount').textContent = gameState.wins;
       document.getElementById('lossesCount').textContent = gameState.losses;
       document.getElementById('winRate').textContent = `${rate}%`;
-      saveToStorage();
     }
 
     function showStatus(message, type) {
@@ -1636,30 +1629,8 @@
     }
 
     // ============================================================
-    //  STORAGE
-    // ============================================================
-    function saveToStorage() {
-      try {
-        localStorage.setItem('minesweeperCasino', JSON.stringify({
-          balance: gameState.balance,
-          wins: gameState.wins,
-          losses: gameState.losses
-        }));
-      } catch (e) {}
-    }
-    function loadFromStorage() {
-      try {
-        const data = JSON.parse(localStorage.getItem('minesweeperCasino') || 'null');
-        if (data) {
-          gameState.balance = data.balance ?? 1000;
-          gameState.wins = data.wins ?? 0;
-          gameState.losses = data.losses ?? 0;
-        }
-      } catch (e) { console.log('Load error:', e); }
-    }
-
-    // ============================================================
     //  TOUCH — single tap, long press, double tap (chord)
+    //  NIENTE più preventDefault su touchmove → scroll naturale
     // ============================================================
     function setupBoardTouchHandlers() {
       const board = document.getElementById('gameBoard');
@@ -1688,7 +1659,6 @@
         clearTimeout(longPressTimer);
 
         if (longPressFired) {
-          e.preventDefault();
           longPressFired = false;
           return;
         }
@@ -1699,7 +1669,6 @@
         const now = Date.now();
 
         if (now - lastTapTime < 350 && lastTapIndex === index && gameState.revealed[index]) {
-          e.preventDefault();
           lastTapIndex = -1;
           lastTapTime = 0;
           chordCell(index);
@@ -1732,9 +1701,7 @@
       if (e.target.closest('.cell')) e.preventDefault();
     });
 
-    document.addEventListener('touchmove', (e) => {
-      if (e.scale !== 1) e.preventDefault();
-    }, { passive: false });
+    // NIENTE più preventDefault globale su touchmove: lo scroll deve funzionare.
 
     // ============================================================
     //  BOOT

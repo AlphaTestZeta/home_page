@@ -17,7 +17,7 @@
     --ink:#080808; --cream:#fbe3ee; --gold-line:rgba(212,175,55,.4);
   }
 
-  html, body { height:100%; overflow:hidden; }
+  html, body { height:100%; overflow:hidden; overscroll-behavior:none; }
   body {
     font-family:'Barlow',system-ui,sans-serif; font-weight:600; color:var(--cream);
     background:
@@ -28,8 +28,9 @@
     display:flex; flex-direction:column;
   }
 
+  /* HEADER */
   .header {
-    flex-shrink:0; position:relative; padding:12px 16px;
+    flex-shrink:0; position:relative; padding:10px 16px;
     background:linear-gradient(180deg,#0a0a0a,#050505);
     border-bottom:1px solid var(--gold);
   }
@@ -37,46 +38,76 @@
     background:linear-gradient(90deg,transparent,var(--gold-lo) 10%,var(--gold) 50%,var(--gold-lo) 90%,transparent); }
   .header-in { display:flex; justify-content:space-between; align-items:center; max-width:560px; margin:0 auto; gap:10px; }
   .box {
-    position:relative; min-width:104px; padding:5px 14px; text-align:center;
+    position:relative; min-width:100px; padding:4px 14px; text-align:center;
     background:linear-gradient(180deg,#1a1a1a,#060606); border:1px solid var(--gold);
     box-shadow:inset 0 0 12px rgba(0,0,0,.6),0 2px 0 #000;
   }
   .box::before { content:''; position:absolute; inset:3px; border:1px solid rgba(212,175,55,.25); pointer-events:none; }
-  .box-val { font-family:'Cinzel',serif; font-weight:700; font-size:1.15rem; color:var(--gold-hi); text-shadow:0 0 10px rgba(212,175,55,.5); line-height:1.1; }
-  .box-lbl { font-size:.58rem; letter-spacing:.22em; color:var(--gold); text-transform:uppercase; margin-top:2px; }
+  .box-val { font-family:'Cinzel',serif; font-weight:700; font-size:1.1rem; color:var(--gold-hi); text-shadow:0 0 10px rgba(212,175,55,.5); line-height:1.1; }
+  .box-lbl { font-size:.55rem; letter-spacing:.22em; color:var(--gold); text-transform:uppercase; margin-top:1px; }
 
+  /* MAIN — colonna flex, no scroll */
   .main {
-    flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain;
-    display:flex; flex-direction:column; align-items:center; gap:12px; padding:14px 14px 28px;
+    flex:1; min-height:0;
+    display:flex; flex-direction:column; align-items:center;
+    gap:10px; padding:10px 14px 14px;
+    overflow:hidden;
   }
-  .main > * { width:100%; max-width:440px; flex-shrink:0; }
+  .main > .title,
+  .main > .row,
+  .main > .launch,
+  .main > .batch,
+  .main > .hint {
+    width:100%; max-width:440px; flex-shrink:0;
+  }
 
+  /* TITOLO */
   .title {
-    font-family:'Pacifico',cursive; font-size:2.6rem; text-align:center;
+    font-family:'Pacifico',cursive; font-size:2.4rem; text-align:center;
     background:linear-gradient(180deg,var(--pink-hi) 0%,var(--pink) 55%,var(--pink-lo) 100%);
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
     filter:drop-shadow(0 0 7px rgba(246,220,132,.75)) drop-shadow(0 0 20px rgba(212,175,55,.45));
-    padding:6px 0 2px; line-height:1.1;
+    padding:2px 0; line-height:1.1;
   }
 
+  /* BOARD — area che prende lo spazio verticale rimanente */
+  .board-area {
+    flex:1 1 auto;
+    min-height:0;
+    width:100%;
+    max-width:440px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
   .board {
     position:relative; padding:8px;
     background:radial-gradient(ellipse at 50% 30%, rgba(255,111,168,.35) 0%, transparent 80%),
                linear-gradient(180deg,var(--rose),var(--rose-lo));
     border:2px solid var(--gold);
-    box-shadow:inset 0 0 0 1px #000, inset 0 0 0 3px rgba(212,175,55,.2), 0 4px 0 #000, 0 0 40px rgba(255,111,168,.3);
+    box-shadow:inset 0 0 0 1px #000, inset 0 0 0 3px rgba(212,175,55,.2), 0 3px 0 #000, 0 0 30px rgba(255,111,168,.3);
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
   .board.shake { animation:shake .5s ease-in-out; }
   @keyframes shake {
     0%,100%{transform:translate(0,0)} 15%{transform:translate(-5px,2px)} 30%{transform:translate(5px,-2px)}
     45%{transform:translate(-4px,3px)} 60%{transform:translate(4px,-3px)} 80%{transform:translate(-2px,1px)}
   }
-  canvas { display:block; width:100%; height:auto; background:var(--rose-deep); border:1px solid rgba(212,175,55,.35); }
+  canvas {
+    display:block;
+    /* dimensioni gestite via JS in base allo spazio disponibile */
+    max-width:100%;
+    background:var(--rose-deep);
+    border:1px solid rgba(212,175,55,.35);
+  }
 
+  /* CONTROLS */
   .row { display:flex; gap:8px; align-items:stretch; }
   .inp { flex:1; position:relative; display:flex; }
   .inp input {
-    width:100%; padding:12px 40px 12px 16px; font-family:'Cinzel',serif; font-size:1.1rem; font-weight:700;
+    width:100%; padding:11px 40px 11px 14px; font-family:'Cinzel',serif; font-size:1.05rem; font-weight:700;
     color:var(--gold-hi); background:linear-gradient(180deg,#0e0e0e,#050505); border:1px solid var(--gold); outline:none;
     box-shadow:inset 0 2px 6px rgba(0,0,0,.7); -moz-appearance:textfield;
   }
@@ -88,13 +119,13 @@
     font-family:'Barlow',sans-serif; font-weight:700; letter-spacing:.12em; text-transform:uppercase; cursor:pointer;
     border:1px solid var(--gold); background:linear-gradient(180deg,#1a1a1a,#060606); color:var(--gold);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 2px 0 #000; user-select:none; touch-action:manipulation;
-    min-width:48px; padding:12px 14px; font-size:1rem; transition:transform .12s, color .2s, box-shadow .2s, opacity .2s;
+    min-width:48px; padding:11px 14px; font-size:1rem; transition:transform .12s, color .2s, box-shadow .2s, opacity .2s;
   }
   .btn:hover { color:var(--gold-hi); border-color:var(--gold-hi); box-shadow:0 2px 0 #000,0 0 16px rgba(212,175,55,.35); }
   .btn:active { transform:translateY(2px); box-shadow:none; }
 
   .launch {
-    width:100%; padding:16px; font-size:1.05rem; font-weight:800; letter-spacing:.2em;
+    width:100%; padding:14px; font-size:1.02rem; font-weight:800; letter-spacing:.2em;
     background:linear-gradient(180deg,var(--pink-hi),var(--pink) 50%,var(--pink-lo)); color:#2a0618; border-color:var(--pink-hi);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 3px 0 #6e1a42; text-shadow:0 1px 0 rgba(255,255,255,.3);
     touch-action:none;
@@ -108,7 +139,7 @@
     cursor:not-allowed; pointer-events:none; opacity:.75; text-shadow:none;
   }
 
-  .batch { display:flex; gap:4px; justify-content:center; align-items:center; height:10px; padding:2px 0; }
+  .batch { display:flex; gap:4px; justify-content:center; align-items:center; height:8px; }
   .batch i {
     display:block; width:16px; height:4px; border-radius:2px;
     background:rgba(212,175,55,.12); border:1px solid rgba(212,175,55,.28);
@@ -117,11 +148,12 @@
   .batch i.on { background:var(--gold); border-color:var(--gold-hi); box-shadow:0 0 6px rgba(246,220,132,.55); }
   .batch.full i.on { background:var(--pink); border-color:var(--pink-hi); box-shadow:0 0 8px rgba(255,111,168,.75); }
 
-  .hint { text-align:center; font-size:.68rem; letter-spacing:.14em; color:#9c6c84; text-transform:uppercase; transition:color .2s; }
+  .hint { text-align:center; font-size:.66rem; letter-spacing:.14em; color:#9c6c84; text-transform:uppercase; transition:color .2s; }
   .hint.wait { color:var(--pink); }
   .hint.jp { color:var(--gold-hi); animation:pulse-hint 1s ease-in-out infinite; }
   @keyframes pulse-hint { 0%,100%{opacity:.7} 50%{opacity:1} }
 
+  /* MODAL */
   .overlay { position:fixed; inset:0; z-index:1000; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(0,0,0,.88); backdrop-filter:blur(6px); }
   .overlay.show { display:flex; }
   .modal {
@@ -137,10 +169,31 @@
   .cheat { position:fixed; top:0; width:80px; height:80px; z-index:99990; background:transparent; touch-action:none; user-select:none; }
   #cheatL { left:0; }
 
+  /* Adattamento per schermi piccoli / bassi */
+  @media (max-height:700px) {
+    .main { padding:8px 12px 12px; gap:8px; }
+    .title { font-size:2.1rem; }
+    .header { padding:8px 14px; }
+    .box { padding:3px 12px; min-width:90px; }
+    .box-val { font-size:1rem; }
+  }
+  @media (max-height:560px) {
+    .main { padding:6px 10px 10px; gap:6px; }
+    .title { font-size:1.6rem; padding:0; }
+    .header { padding:6px 12px; }
+    .box { padding:2px 10px; min-width:80px; }
+    .box-val { font-size:0.9rem; }
+    .box-lbl { font-size:.5rem; }
+    .launch { padding:10px; font-size:.9rem; }
+    .row input { padding:9px 36px 9px 12px; font-size:1rem; }
+    .btn { padding:9px 12px; }
+    .hint { font-size:.6rem; }
+    .batch { height:6px; }
+    .batch i { width:12px; height:3px; }
+  }
   @media (max-width:480px) {
-    .title { font-size:2.2rem; }
-    .box { min-width:86px; padding:4px 10px; } .box-val { font-size:1rem; }
-    .main { padding:10px 10px 24px; gap:10px; }
+    .title { font-size:2rem; }
+    .main { padding:8px 10px 12px; gap:8px; }
     .batch i { width:14px; }
   }
   @media (prefers-reduced-motion:reduce) { .board.shake, .modal, .hint.jp { animation:none; } }
@@ -156,7 +209,9 @@
 
   <main class="main">
     <div class="title">Plink</div>
-    <div class="board" id="board"><canvas id="cv"></canvas></div>
+    <div class="board-area">
+      <div class="board" id="board"><canvas id="cv"></canvas></div>
+    </div>
 
     <div class="row">
       <button class="btn" id="minus">−</button>
@@ -185,25 +240,26 @@
   //  COSTANTI
   // ============================================================
   const W = 400, S = 28, ROWS = 12, ROW_H = 31, Y0 = 40, CX = 200;
-  const LAST_Y = Y0 + (ROWS - 1) * ROW_H;          // 381
-  const LEFT = CX - 6.5 * S;                       // 18
-  const H = LAST_Y + 10 + 36 + 10;                 // 437
+  const LAST_Y = Y0 + (ROWS - 1) * ROW_H;
+  const LEFT = CX - 6.5 * S;
+  const H = LAST_Y + 10 + 36 + 10;
   const R = 7, PR = 3.5;
   const G = 700, DT = 1 / 240, REST = 0.5;
   const MIN_BET = 5, MAX_BET = 100;
   const BATCH_MAX = 10;
 
-  // ═══════════════════════════════════════════════════════════════
-  //  TABELLA MOLTIPLICATORI — BILANCIATA (RTP ~36%)
-  //  [3, 1.5, 1, 0.5, 0.3, 0.2] per lato, JP 0.5x al centro
-  //  Max 3x: solo ai bordi, ~0.024% per lato (rarissimo)
-  // ═══════════════════════════════════════════════════════════════
+  // Tabella simmetrica bilanciata
   const MULT = [3, 1.5, 1, 0.5, 0.3, 0.2];
-  const JACKPOT_PAY = 0.5;
   const mults = [...MULT, 'JACKPOT', ...MULT.slice().reverse()];
   const MAX_MULT = Math.max.apply(null, MULT);   // 3
 
-  // Jackpot tuning
+  // Jackpot a carica: 10 colpi → 10x
+  const JP_STREAK_TARGET = 10;
+  const JP_PAY_SMALL = 0.5;
+  const JP_PAY_BIG = 10;
+  let jpStreak = 0;
+
+  // Caos jackpot
   const JACKPOT_FREE_BALLS = 5;
   const SLOWMO_DUR = 1.0;
   const SLOWMO_FACTOR = 0.1;
@@ -212,14 +268,10 @@
   const CHAOS_FORCE_MIN = 900;
   const CHAOS_FORCE_MAX = 1600;
 
-  // ============================================================
-  //  STATO
-  // ============================================================
   let balance = 500;
   let balls = [], floats = [], bits = [], flash = new Array(13).fill(0);
   let jHeld = false, armed = false, broke = false;
   let batchLaunched = 0;
-
   let timeScale = 1;
   let slowmo = null;
   let jackpotFlash = 0;
@@ -242,6 +294,40 @@
   const batchEl = $('batch'), hintEl = $('hint'), launchBtn = $('launch');
   const dots = [];
   for (let i = 0; i < BATCH_MAX; i++) { const d = document.createElement('i'); batchEl.appendChild(d); dots.push(d); }
+
+  // ============================================================
+  //  LAYOUT — adatta il canvas allo spazio disponibile
+  // ============================================================
+  const boardArea = document.querySelector('.board-area');
+  function fitLayout() {
+    if (!boardArea) return;
+    const availW = boardArea.clientWidth;
+    const availH = boardArea.clientHeight;
+    if (availW <= 20 || availH <= 20) return;
+    // Chrome: board padding 8*2 + board border 2*2 + canvas border 1*2 = 22px
+    const chrome = 8 * 2 + 2 * 2 + 1 * 2;
+    const maxW = Math.max(20, availW - chrome);
+    const maxH = Math.max(20, availH - chrome);
+    const ratio = W / H;
+    let cw, ch;
+    if (maxW / maxH > ratio) {
+      // height-bound
+      ch = maxH;
+      cw = ch * ratio;
+    } else {
+      // width-bound
+      cw = maxW;
+      ch = cw / ratio;
+    }
+    cv.style.width = cw + 'px';
+    cv.style.height = ch + 'px';
+  }
+  requestAnimationFrame(() => { fitLayout(); setTimeout(fitLayout, 50); setTimeout(fitLayout, 300); });
+  window.addEventListener('resize', fitLayout);
+  window.addEventListener('orientationchange', () => setTimeout(fitLayout, 100));
+  if (window.ResizeObserver && boardArea) {
+    new ResizeObserver(fitLayout).observe(boardArea);
+  }
 
   // ============================================================
   //  AUDIO
@@ -272,7 +358,6 @@
     tone(520 + Math.random() * 380 + Math.min(speed, 400), .05, 'triangle', .05);
   }
   function winSound(m) {
-    // Boost pitch per 1.5x e 3x
     if (m >= 1) [0, 1, 2].forEach(i => setTimeout(() => tone(520 * Math.pow(1.26, i + (m >= 2 ? 2 : 0)), .14, 'square', .08), i * 90));
     else tone(170, .22, 'square', .07);
   }
@@ -281,6 +366,13 @@
     [0, 1, 2, 3, 4, 5, 6, 7].forEach(i => {
       setTimeout(() => tone(440 * Math.pow(1.12, i), 0.22, 'triangle', 0.06), i * 65);
     });
+  }
+  function jackpotBigSound() {
+    sweep(200, 30, 1.0, 'sine', 0.25);
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].forEach(i => {
+      setTimeout(() => tone(400 * Math.pow(1.15, i), 0.3, 'triangle', 0.09), i * 50);
+    });
+    setTimeout(() => sweep(80, 800, 0.5, 'sawtooth', 0.12), 400);
   }
   function chaosSound() {
     for (let i = 0; i < 8; i++) {
@@ -315,7 +407,6 @@
     if (balance < MIN_BET || bet < MIN_BET) { checkBroke(); return; }
     balance = r1(balance - bet);
     batchLaunched++;
-
     const cheat = jHeld || armed; armed = false;
     let tx = CX;
     if (cheat) {
@@ -401,7 +492,6 @@
         b.vx += Math.max(-700, Math.min(700, (b.tx - b.x) * 6)) * dt;
       }
       b.vy += G * dt; b.x += b.vx * dt; b.y += b.vy * dt;
-
       if (b.y < CEILING_Y) { b.y = CEILING_Y; if (b.vy < 0) b.vy = -b.vy * CEILING_REST; }
 
       for (const p of pegs) {
@@ -448,12 +538,13 @@
   // ============================================================
   //  JACKPOT
   // ============================================================
-  function triggerJackpot(k) {
+  function triggerJackpot(k, isBig) {
     slowmo = { t: 0, dur: SLOWMO_DUR };
     jackpotFlash = 1.0;
-    burst(LEFT + (k + .5) * S, LAST_Y + 10, 120, true);
+    burst(LEFT + (k + .5) * S, LAST_Y + 10, isBig ? 200 : 120, true);
     shakeBoard();
-    jackpotSound();
+    if (isBig) jackpotBigSound();
+    else jackpotSound();
   }
 
   function spawnFreeBall() {
@@ -497,26 +588,35 @@
     const k = Math.max(0, Math.min(12, Math.floor((b.x - LEFT) / S)));
     const raw = mults[k];
     const isJP = raw === 'JACKPOT';
-    const m = isJP ? JACKPOT_PAY : raw;
-    const pay = r1(b.bet * m);
+
     flash[k] = 1;
 
     if (b.free) {
-      if (!isJP && m >= 3) burst(LEFT + (k + .5) * S, LAST_Y + 10, 15, true);
-    } else {
+      if (!isJP && raw >= 3) burst(LEFT + (k + .5) * S, LAST_Y + 10, 15, true);
+    } else if (isJP) {
+      jpStreak++;
+      const isBig = jpStreak >= JP_STREAK_TARGET;
+      const m = isBig ? JP_PAY_BIG : JP_PAY_SMALL;
+      const pay = r1(b.bet * m);
       balance = r1(balance + pay);
-      if (isJP) {
-        floats.push({ x: LEFT + (k + .5) * S, y: LAST_Y + 6, t: 0, dur: 2.5, text: '★ JACKPOT ★', hi: true });
-        triggerJackpot(k);
+
+      if (isBig) {
+        jpStreak = 0;
+        floats.push({ x: LEFT + (k + .5) * S, y: LAST_Y + 6, t: 0, dur: 2.5, text: '★ JACKPOT 10x ★', hi: true });
       } else {
-        floats.push({ x: LEFT + (k + .5) * S, y: LAST_Y + 6, t: 0, dur: 1.1, text: (m >= 1 ? '+' : '') + fmt(pay), hi: m >= 1 });
-        winSound(m);
-        if (m >= 3) {
-          burst(LEFT + (k + .5) * S, LAST_Y + 10, 60, false);
-          shakeBoard();
-        } else if (m >= 1.5) {
-          burst(LEFT + (k + .5) * S, LAST_Y + 10, 20, false);
-        }
+        floats.push({ x: LEFT + (k + .5) * S, y: LAST_Y + 6, t: 0, dur: 1.4, text: '+' + fmt(pay) + '  (' + jpStreak + '/' + JP_STREAK_TARGET + ')', hi: true });
+      }
+      triggerJackpot(k, isBig);
+    } else {
+      const pay = r1(b.bet * raw);
+      balance = r1(balance + pay);
+      floats.push({ x: LEFT + (k + .5) * S, y: LAST_Y + 6, t: 0, dur: 1.1, text: (raw >= 1 ? '+' : '') + fmt(pay), hi: raw >= 1 });
+      winSound(raw);
+      if (raw >= 3) {
+        burst(LEFT + (k + .5) * S, LAST_Y + 10, 60, false);
+        shakeBoard();
+      } else if (raw >= 1.5) {
+        burst(LEFT + (k + .5) * S, LAST_Y + 10, 20, false);
       }
     }
 
@@ -539,11 +639,11 @@
   //  DISEGNO
   // ============================================================
   function slotColor(m) {
-    if (m === 'JACKPOT') return ['#3a0a20', '#5a1034', '#f6dc84'];   // JP: scuro/rosa + testo oro
-    if (m >= 3) return ['#f6dc84', '#b8932a', '#1a1200'];             // 3x: oro (rarissimo)
-    if (m >= 1) return ['#ff6fa8', '#b0306a', '#2a0618'];             // 1.5x, 1x: rosa
-    if (m >= 0.5) return ['#d98aab', '#7a2f55', '#1f0512'];           // 0.5x: rosa chiaro
-    return ['#3d1228', '#1f0814', '#c98aa8'];                         // 0.3x, 0.2x: scuro
+    if (m === 'JACKPOT') return ['#4a1020', '#2a0618', '#f6dc84'];
+    if (m >= 3) return ['#f6dc84', '#b8932a', '#1a1200'];
+    if (m >= 1) return ['#ff6fa8', '#b0306a', '#2a0618'];
+    if (m >= 0.5) return ['#d98aab', '#7a2f55', '#1f0512'];
+    return ['#3d1228', '#1f0814', '#c98aa8'];
   }
 
   function slowmoIntensity() {
@@ -560,26 +660,52 @@
 
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     const jpActive = !!slowmo || jackpotFlash > 0.1;
+    const jpCharged = jpStreak >= 8;
+
     for (let k = 0; k < 13; k++) {
       const x = LEFT + k * S + 1, y = LAST_Y + 10, w = S - 2, h = 36, m = mults[k], c = slotColor(m);
       const g = ctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, c[0]); g.addColorStop(1, c[1]);
       ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
 
       if (m === 'JACKPOT') {
-        const pulse = 0.55 + 0.45 * Math.sin(performance.now() / (jpActive ? 180 : 400));
+        const pulse = 0.55 + 0.45 * Math.sin(performance.now() / (jpActive ? 180 : (jpCharged ? 250 : 400)));
         ctx.strokeStyle = 'rgba(246,220,132,' + pulse + ')';
-        ctx.lineWidth = jpActive ? 2.5 : 2;
+        ctx.lineWidth = jpActive ? 2.5 : (jpCharged ? 2.2 : 2);
         ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+
+        if (jpCharged && !jpActive) {
+          ctx.shadowColor = 'rgba(246,220,132,.8)';
+          ctx.shadowBlur = 8 + (jpStreak - 8) * 4;
+          ctx.strokeRect(x + 1, y + 1, w - 2, h - 2);
+          ctx.shadowBlur = 0;
+        }
       }
+
       if (flash[k] > 0) {
         ctx.fillStyle = 'rgba(255,255,255,' + (flash[k] * .75) + ')';
         ctx.fillRect(x, y, w, h);
         flash[k] = Math.max(0, flash[k] - el * 2.2);
       }
+
       if (m === 'JACKPOT') {
-        ctx.font = '700 ' + (jpActive ? 20 : 18) + 'px Barlow, sans-serif';
+        // Testo "JP"
+        ctx.font = '700 13px Barlow, sans-serif';
         ctx.fillStyle = c[2];
-        ctx.fillText(jpActive ? '★' : '?', x + w / 2, y + h / 2 + 1);
+        ctx.fillText('JP', x + w / 2, y + 13);
+
+        // Barra di progresso streak
+        const barY = y + h - 7, barH = 3, barW = w - 4, barX = x + 2;
+        ctx.fillStyle = 'rgba(0,0,0,.5)';
+        ctx.fillRect(barX, barY, barW, barH);
+        const fill = (jpStreak / JP_STREAK_TARGET) * barW;
+        if (fill > 0) {
+          const bp = jpStreak >= JP_STREAK_TARGET - 1 ? (0.7 + 0.3 * Math.sin(performance.now() / 120)) : 1;
+          ctx.fillStyle = 'rgba(246,220,132,' + bp + ')';
+          ctx.fillRect(barX, barY, fill, barH);
+        }
+        ctx.strokeStyle = 'rgba(246,220,132,.4)';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(barX, barY, barW, barH);
       } else {
         ctx.font = '700 10px Barlow, sans-serif';
         ctx.fillStyle = c[2];
@@ -660,7 +786,6 @@
   let last = performance.now(), acc = 0;
   function frame(now) {
     const el = Math.min((now - last) / 1000, .05); last = now;
-
     if (slowmo) {
       slowmo.t += el;
       const p = slowmo.t / slowmo.dur;

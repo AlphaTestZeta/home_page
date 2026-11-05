@@ -541,26 +541,6 @@
   </div>
 </div>
 
-<!-- ============================================================
-     🎵 MUSICA DI SOTTOFONDO (OST)
-     ▶ MODIFICA QUI IL PERCORSO/NOME DEL FILE MP3 ◀
-     Basta cambiare l'attributo src="..." con il nome del tuo file.
-     Se il nome contiene spazi o caratteri speciali e il browser
-     non lo trova, prova a codificarlo, es:
-       src="Casino%20Crawler%20-%20OST%20%5BRick%5D.mp3"
-     ============================================================ -->
-<audio id="ost" src="Casino Crawler - OST [Rick].mp3" loop preload="auto"></audio>
-
-  .side-header-actions{display:flex;gap:8px;align-items:center}
-  .music-toggle{
-    background:transparent;border:1px solid var(--gold);color:var(--gold-hi);
-    font-size:1.05rem;width:36px;height:36px;border-radius:4px;cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
-    font-family:inherit;font-weight:700;line-height:1;
-    transition:background .15s,color .15s,opacity .15s;
-    padding:0}
-  .music-toggle:hover{background:var(--gold);color:#000}
-  .music-toggle.muted{color:#666;border-color:#555;opacity:.75}
 
 <script>
 (() => {
@@ -723,39 +703,52 @@ function buildWallTextures(){
     g.fill();
     base.push(c);
   }
-  { // 4 porta dorata
+    { // 4 porta Wolf3D — pannello bordeaux con cornice oro, maniglia a sinistra
     const c=texCanvas(),g=c.getContext('2d');
     const grd=g.createLinearGradient(0,0,0,TS);
     grd.addColorStop(0,'#3a0810');
     grd.addColorStop(0.5,'#2a0508');
     grd.addColorStop(1,'#180304');
     g.fillStyle=grd;g.fillRect(0,0,TS,TS);
-    g.strokeStyle='rgba(0,0,0,0.3)';g.lineWidth=1;
-    for(let i=4;i<TS;i+=6){
-      g.beginPath();g.moveTo(0,i);
-      g.bezierCurveTo(20,i+2,44,i-2,TS,i);g.stroke();
+
+    // venature legno
+    g.strokeStyle='rgba(80,20,30,0.4)';g.lineWidth=1;
+    for(let i=0;i<TS;i+=6){
+      g.beginPath();
+      g.moveTo(0,i);
+      g.bezierCurveTo(20,i+2,44,i-1,TS,i);
+      g.stroke();
     }
-    g.strokeStyle='#d4af37';g.lineWidth=4;
-    g.strokeRect(2,2,60,60);
+
+    // cornice interna dorata
+    g.strokeStyle='#d4af37';g.lineWidth=3;
+    g.strokeRect(10,10,44,44);
     g.strokeStyle='#f6dc84';g.lineWidth=1;
-    g.strokeRect(6,6,52,52);
-    g.fillStyle='#a8842a';
-    g.fillRect(6,20,52,2);
-    g.fillRect(6,42,52,2);
+    g.strokeRect(13,13,38,38);
+
+    // emblema a rombo al centro
+    g.fillStyle='#c62b3d';
+    g.beginPath();
+    g.moveTo(32,20);g.lineTo(42,30);g.lineTo(32,44);g.lineTo(22,30);
+    g.closePath();g.fill();
+    g.strokeStyle='#f6dc84';g.lineWidth=1.5;g.stroke();
+
     g.fillStyle='#f6dc84';
     g.beginPath();
-    g.moveTo(32,26);g.lineTo(38,32);g.lineTo(32,38);g.lineTo(26,32);
+    g.moveTo(32,26);g.lineTo(37,30);g.lineTo(32,36);g.lineTo(27,30);
     g.closePath();g.fill();
-    g.strokeStyle='#a8842a';g.lineWidth=1;g.stroke();
-    g.fillStyle='#c62b3d';
-    g.beginPath();g.arc(32,32,2.5,0,TAU);g.fill();
-    g.fillStyle='#f6dc84';
-    g.beginPath();g.arc(48,50,3.5,0,TAU);g.fill();
+
+    // maniglia a sinistra (visibile più a lungo quando la porta scorre)
+    g.fillStyle='#d4af37';
+    g.beginPath();g.arc(8,32,4,0,TAU);g.fill();
     g.strokeStyle='#7a5e13';g.lineWidth=1;g.stroke();
-    g.strokeStyle='rgba(0,0,0,0.5)';g.lineWidth=1;
-    g.beginPath();g.moveTo(32,8);g.lineTo(32,56);g.stroke();
-    g.fillStyle='#0a0204';
-    g.beginPath();g.arc(48,50,1.5,0,TAU);g.fill();
+    g.fillStyle='#fff6c8';
+    g.beginPath();g.arc(7,30,1.5,0,TAU);g.fill();
+
+    // bordo esterno scuro
+    g.strokeStyle='rgba(0,0,0,0.6)';g.lineWidth=2;
+    g.strokeRect(0,0,TS,TS);
+
     base.push(c);
   }
 
@@ -922,6 +915,79 @@ const MAX_CHUNKS=500;
 const chunks=new Map();
 let _lcx=NaN,_lcy=NaN,_lch=null;
 const LANES=[2,8,13];
+/* ================= PORTE WOLF3D ================= */
+const DOOR_TILE=5;
+const DOOR_OPEN_SPEED=3.5;      // unità/sec di apertura (1.0 = piena apertura in ~0.29s)
+const DOOR_TRIGGER=3.0;         // distanza entro cui un'entità fa aprire la porta
+const DOOR_CLOSE_DELAY=3.0;     // secondi senza nessuno vicino prima di richiudersi
+const DOOR_PASSABLE_AT=0.85;    // open >= 0.85 → attraversabile (collisione/LOS)
+const DOOR_FULLY_OPEN_AT=0.99;  // open >= 0.99 → il raggio la ignora del tutto
+
+const doors=new Map();           // "x,y" -> {open, target, closeTimer, moving}
+
+function getDoor(x,y){
+  const k=x+','+y;
+  let d=doors.get(k);
+  if(!d){
+    d={open:0,target:0,closeTimer:0,moving:false,wasOpen:false};
+    doors.set(k,d);
+  }
+  return d;
+}
+
+function updateDoors(dt){
+  // Scansiona l'intorno del giocatore (raggio 4) per attivare porte vicine
+  const pcx=Math.floor(player.x), pcy=Math.floor(player.y);
+  const RAD=4;
+  for(let dy=-RAD;dy<=RAD;dy++){
+    for(let dx=-RAD;dx<=RAD;dx++){
+      const tx=pcx+dx, ty=pcy+dy;
+      if(tileAt(tx,ty)!==DOOR_TILE) continue;
+      const d=getDoor(tx,ty);
+      const cx=tx+0.5, cy=ty+0.5;
+
+      let triggered=false;
+      // Giocatore
+      if(Math.hypot(player.x-cx,player.y-cy)<DOOR_TRIGGER) triggered=true;
+      // Nemici
+      if(!triggered){
+        for(const e of enemies){
+          if(!e.alive) continue;
+          if(Math.hypot(e.x-cx,e.y-cy)<DOOR_TRIGGER){triggered=true;break;}
+        }
+      }
+
+      if(triggered){
+        d.target=1;
+        d.closeTimer=DOOR_CLOSE_DELAY;
+      }else if(d.target===1){
+        d.closeTimer-=dt;
+        if(d.closeTimer<=0) d.target=0;
+      }
+
+      // Suono quando inizia a muoversi
+      if(!d.moving && Math.abs(d.target-d.open)>0.001){
+        d.moving=true;
+        if(d.target>d.open) sfx.doorOpen(); else sfx.doorClose();
+      }
+    }
+  }
+
+  // Anima tutte le porte conosciute
+  for(const d of doors.values()){
+    if(d.open<d.target){
+      d.open=Math.min(d.target,d.open+DOOR_OPEN_SPEED*dt);
+    }else if(d.open>d.target){
+      d.open=Math.max(d.target,d.open-DOOR_OPEN_SPEED*dt);
+    }else{
+      d.moving=false;
+    }
+  }
+}
+
+function resetDoors(){
+  doors.clear();
+}
 
 function genChunk(cx,cy){
   const rng=mulberry32(hash2(cx,cy));
@@ -1065,6 +1131,8 @@ const sfx={
   shotgun(){noiseBurst(0.2,0.26,2200,0.9);tone(170,0.15,'square',0.13,55);setTimeout(()=>noiseBurst(0.09,0.1,1100,1),25);},
   empty(){tone(140,0.06,'square',0.06,90);},
   switch(){tone(400,0.06,'square',0.08);setTimeout(()=>tone(600,0.06,'square',0.08),60);},
+  doorOpen(){ noiseBurst(0.35,0.08,900,1.5); setTimeout(()=>tone(240,0.15,'square',0.04,180),80); },
+  doorClose(){ noiseBurst(0.35,0.09,700,1.5); setTimeout(()=>tone(160,0.18,'square',0.05,100),80); },
   hit(){tone(760,0.05,'square',0.07,420);},
   kill(){noiseBurst(0.22,0.16,900,1);tone(320,0.22,'sawtooth',0.09,70);},
   pickup(){tone(620,0.08,'sine',0.12);setTimeout(()=>tone(940,0.12,'sine',0.12),70);},
@@ -1371,7 +1439,8 @@ function rebuildFlow(){
     if(d>=R)continue;
     for(let i=0;i<4;i++){
       const nx=x+DX[i],ny=y+DY[i];
-      if(tileAt(nx,ny)!==0)continue;
+      const tt=tileAt(nx,ny);
+      if(tt!==0 && tt!==DOOR_TILE)continue;
       const k=fkey(nx,ny);
       if(flow.has(k))continue;
       flow.set(k,d+1);
@@ -1382,11 +1451,22 @@ function rebuildFlow(){
 function flowAt(x,y){return flow.get(fkey(x,y));}
 
 /* ================= COLLISIONI ================= */
+function doorIsSolid(tx,ty){
+  const d=doors.get(tx+','+ty);
+  if(!d) return true;          // porta non ancora vista → chiusa
+  return d.open < DOOR_PASSABLE_AT;
+}
+
 function collides(x,y,r){
-  return tileAt(Math.floor(x-r),Math.floor(y-r))!==0||
-         tileAt(Math.floor(x+r),Math.floor(y-r))!==0||
-         tileAt(Math.floor(x-r),Math.floor(y+r))!==0||
-         tileAt(Math.floor(x+r),Math.floor(y+r))!==0;
+  const tx0=Math.floor(x-r),ty0=Math.floor(y-r);
+  const tx1=Math.floor(x+r),ty1=Math.floor(y+r);
+  const check=(tx,ty)=>{
+    const t=tileAt(tx,ty);
+    if(t===0) return false;
+    if(t===DOOR_TILE) return doorIsSolid(tx,ty);
+    return true;
+  };
+  return check(tx0,ty0)||check(tx1,ty0)||check(tx0,ty1)||check(tx1,ty1);
 }
 function moveEntity(e,dx,dy,r){
   if(dx){const nx=e.x+dx;if(!collides(nx,e.y,r))e.x=nx;}
@@ -1395,11 +1475,18 @@ function moveEntity(e,dx,dy,r){
 function hasLOS(x0,y0,x1,y1){
   const dx=x1-x0,dy=y1-y0;
   const dist=Math.hypot(dx,dy);
-  if(dist<0.001)return true;
+  if(dist<0.001) return true;
   const steps=Math.ceil(dist*4);
   for(let i=1;i<steps;i++){
     const t=i/steps;
-    if(tileAt(Math.floor(x0+dx*t),Math.floor(y0+dy*t))!==0)return false;
+    const tx=Math.floor(x0+dx*t),ty=Math.floor(y0+dy*t);
+    const tile=tileAt(tx,ty);
+    if(tile===0) continue;
+    if(tile===DOOR_TILE){
+      const d=doors.get(tx+','+ty);
+      if(d && d.open>=DOOR_PASSABLE_AT) continue;
+    }
+    return false;
   }
   return true;
 }
@@ -1410,12 +1497,21 @@ function rayWallDist(px,py,rdx,rdy,maxDist){
   let stepX,stepY,sdx,sdy;
   if(rdx<0){stepX=-1;sdx=(px-mapX)*ddx;}else{stepX=1;sdx=(mapX+1-px)*ddx;}
   if(rdy<0){stepY=-1;sdy=(py-mapY)*ddy;}else{stepY=1;sdy=(mapY+1-py)*ddy;}
-  let dist=0,guard=0;
+  let dist=0,guard=0,side=0;
   while(guard++<300){
-    if(sdx<sdy){dist=sdx;sdx+=ddx;mapX+=stepX;}
-    else{dist=sdy;sdy+=ddy;mapY+=stepY;}
-    if(dist>maxDist)return maxDist;
-    if(tileAt(mapX,mapY)!==0)return dist;
+    if(sdx<sdy){dist=sdx;sdx+=ddx;mapX+=stepX;side=0;}
+    else{dist=sdy;sdy+=ddy;mapY+=stepY;side=1;}
+    if(dist>maxDist) return maxDist;
+    const tile=tileAt(mapX,mapY);
+    if(tile===0) continue;
+    if(tile===DOOR_TILE){
+      const d=doors.get(mapX+','+mapY);
+      if(d && d.open>=DOOR_FULLY_OPEN_AT) continue;
+      let wallX=(side===0)?(py+dist*rdy):(px+dist*rdx);
+      wallX-=Math.floor(wallX);
+      if(d && wallX<d.open) continue; // gap
+    }
+    return dist;
   }
   return maxDist;
 }
@@ -2294,6 +2390,7 @@ function update(dt){
   updateEnemies(dt);
   separateEnemies();
   updateTeleport(dt);
+  updateDoors(dt);
   updateBullets(dt);
   updateItems(dt);
   updateItemSpawn(dt);
@@ -2337,31 +2434,54 @@ function renderWalls(){
     if(rdx<0){stepX=-1;sdx=(px-mapX)*ddx;}else{stepX=1;sdx=(mapX+1-px)*ddx;}
     if(rdy<0){stepY=-1;sdy=(py-mapY)*ddy;}else{stepY=1;sdy=(mapY+1-py)*ddy;}
 
-    let side=0,tile=0,guard=0;
+    let side=0,tile=0,guard=0,hitPerp=0,hitDoor=null;
+
     while(guard++<200){
       if(sdx<sdy){sdx+=ddx;mapX+=stepX;side=0;}
       else{sdy+=ddy;mapY+=stepY;side=1;}
       tile=tileAt(mapX,mapY);
-      if(tile!==0)break;
+      if(tile===0) continue;
+
+      const perpRaw=(side===0)?(sdx-ddx):(sdy-ddy);
+      const perp=Math.max(0.01,perpRaw);
+
+      if(tile===DOOR_TILE){
+        const d=doors.get(mapX+','+mapY);
+        if(d && d.open>=DOOR_FULLY_OPEN_AT) continue; // porta aperta → passa oltre
+        let wallX=(side===0)?(py+perp*rdy):(px+perp*rdx);
+        wallX-=Math.floor(wallX);
+        if(d && wallX<d.open) continue; // gap → passa oltre
+        hitPerp=perp;
+        hitDoor={d,wallX};
+        break;
+      }
+      hitPerp=perp;
+      hitDoor=null;
+      break;
     }
+
     if(tile===0){zbuffer[x]=1000;continue;}
+    zbuffer[x]=hitPerp;
 
-    let perp=(side===0)?(sdx-ddx):(sdy-ddy);
-    if(!isFinite(perp)||perp<0.01)perp=0.01;
-    zbuffer[x]=perp;
-
-    const lineH=Math.min(H*8,H/perp);
+    const lineH=Math.min(H*8,H/hitPerp);
     const drawStart=halfH-lineH*0.5;
 
-    let wallX=(side===0)?(py+perp*rdy):(px+perp*rdx);
-    wallX-=Math.floor(wallX);
-
-    let texX=Math.floor(wallX*TS);
-    if(side===0&&rdx>0)texX=TS-1-texX;
-    if(side===1&&rdy<0)texX=TS-1-texX;
+    let texX;
+    if(hitDoor){
+      // Texture della porta scorrevole: campionamento offsettato
+      const off=hitDoor.d.open;
+      const u=(hitDoor.wallX-off)/(1-off);
+      texX=Math.floor(u*TS);
+    }else{
+      let wallX=(side===0)?(py+hitPerp*rdy):(px+hitPerp*rdx);
+      wallX-=Math.floor(wallX);
+      texX=Math.floor(wallX*TS);
+      if(side===0&&rdx>0)texX=TS-1-texX;
+      if(side===1&&rdy<0)texX=TS-1-texX;
+    }
     texX=Math.max(0,Math.min(TS-1,texX));
 
-    let sh=perp/22;
+    let sh=hitPerp/22;
     if(side===1)sh+=0.12;
     sh=clamp(sh,0,0.72);
     const lvl=Math.min(SHADE_LEVELS-1,Math.floor(sh*SHADE_LEVELS));
@@ -2597,6 +2717,7 @@ function resetGame(){
   sideOverlay.classList.remove('show');
   pendingBonusCards=null;
   updateBonusCount();
+  resetDoors();
   rebuildFlow();
   nextWave();
   elHp.style.width='100%';

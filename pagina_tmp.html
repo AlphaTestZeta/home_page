@@ -301,6 +301,15 @@
     display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;
     padding:12px;background:rgba(0,0,0,.4);border:1px solid rgba(212,175,55,.25);border-radius:4px;
   }
+  .side-header-actions{display:flex;gap:8px;align-items:center}
+  .music-toggle{
+    background:transparent;border:1px solid var(--gold);color:var(--gold-hi);
+    font-size:1.05rem;width:36px;height:36px;border-radius:4px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-family:inherit;font-weight:700;line-height:1;
+    transition:background .15s,color .15s,opacity .15s;padding:0}
+  .music-toggle:hover{background:var(--gold);color:#000}
+  .music-toggle.muted{color:#666;border-color:#555;opacity:.75}
   .ss-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
     font-size:.7rem;letter-spacing:.06em}
   .ss-key{color:#a89660;text-transform:uppercase;font-family:'Barlow',sans-serif;font-weight:600}
@@ -541,6 +550,7 @@
   </div>
 </div>
 
+<audio id="ost" src="Casino Crawler - OST [Rick].mp3" loop preload="auto"></audio>
 
 <script>
 (() => {
@@ -994,10 +1004,11 @@ function genChunk(cx,cy){
   const g=new Uint8Array(CHUNK*CHUNK).fill(1);
   const set=(x,y,v)=>{if(x>=0&&x<CHUNK&&y>=0&&y<CHUNK)g[y*CHUNK+x]=v;};
   const doorMarks=new Set();
-  const markDoor=(x,y)=>{
+  const markPassage=(x,y)=>{
     if(x<0||x>=CHUNK||y<0||y>=CHUNK)return;
+    if(LANES.includes(x)&&LANES.includes(y))return; // no porte agli incroci
     const idx=y*CHUNK+x;
-    if(g[idx]!==0)doorMarks.add(idx);
+    if(g[idx]===0)doorMarks.add(idx); // marca il PASSAGGIO (tile 0)
   };
 
   for(const x of LANES)for(let y=0;y<CHUNK;y++)set(x,y,0);
@@ -1018,42 +1029,31 @@ function genChunk(cx,cy){
     for(let x=Math.min(mcx,tx);x<=Math.max(mcx,tx);x++)set(x,mcy,0);
     for(let y=Math.min(mcy,ty);y<=Math.max(mcy,ty);y++)set(tx,y,0);
 
-    if(tx<rx){
-      markDoor(rx-1,mcy-1);
-      markDoor(rx-1,mcy+1);
-    }else if(tx>=rx+w){
-      markDoor(rx+w,mcy-1);
-      markDoor(rx+w,mcy+1);
-    }
-    if(ty<ry){
-      markDoor(tx-1,ry-1);
-      markDoor(tx+1,ry-1);
-    }else if(ty>=ry+h){
-      markDoor(tx-1,ry+h);
-      markDoor(tx+1,ry+h);
-    }
+    if(tx<rx) markPassage(rx-1,mcy);
+    else if(tx>=rx+w) markPassage(rx+w,mcy);
+    if(ty<ry) markPassage(tx,ry-1);
+    else if(ty>=ry+h) markPassage(tx,ry+h);
   }
 
   const pillars=2+Math.floor(rng()*2);
   for(let i=0;i<pillars;i++){
     const lane=LANES[Math.floor(rng()*LANES.length)];
     const pos=3+Math.floor(rng()*10);
+    const idxA=pos*CHUNK+lane, idxB=lane*CHUNK+pos;
     if(rng()<0.5){
-      if(g[pos*CHUNK+lane]===0)set(pos,lane,1+Math.floor(rng()*4));
+      if(g[idxA]===0&&!doorMarks.has(idxA))set(pos,lane,1+Math.floor(rng()*4));
     }else{
-      if(g[lane*CHUNK+pos]===0)set(lane,pos,1+Math.floor(rng()*4));
+      if(g[idxB]===0&&!doorMarks.has(idxB))set(lane,pos,1+Math.floor(rng()*4));
     }
   }
 
   for(let y=0;y<CHUNK;y++)for(let x=0;x<CHUNK;x++){
     const idx=y*CHUNK+x;
-    if(g[idx]!==0){
-      if(doorMarks.has(idx)){
-        g[idx]=5;
-      }else{
-        const gx=cx*CHUNK+x,gy=cy*CHUNK+y;
-        g[idx]=1+(hash2(gx>>2,gy>>2)%4);
-      }
+    if(doorMarks.has(idx)){
+      g[idx]=5; // porta sul passaggio
+    }else if(g[idx]!==0){
+      const gx=cx*CHUNK+x,gy=cy*CHUNK+y;
+      g[idx]=1+(hash2(gx>>2,gy>>2)%4);
     }
   }
   return g;
@@ -1317,7 +1317,7 @@ function rollRarity(){
 }
 
 function rollBonus(){
-  const available=STAT_DEFS.filter(d=>(d.cap===undefined)||((statCaps[d.key]-stats[d.key])>0.005));
+  const available=STAT_DEFS.filter(d=>(statCaps[d.key]-stats[d.key])>0.005);
   if(!available.length)return null;
   const def=available[Math.floor(Math.random()*available.length)];
   const rarity=rollRarity();
@@ -1549,11 +1549,14 @@ const musicToggleBtn=document.getElementById('musicToggle');
 let musicMuted=false;
 
 function syncMusic(){
-  if(musicMuted||state!=='playing'){
-    if(!ostAudio.paused)ostAudio.pause();
-  }else{
-    if(ostAudio.paused)ostAudio.play().catch(()=>{});
-  }
+  if(!ostAudio) return;
+  try{
+    if(musicMuted||state!=='playing'){
+      if(!ostAudio.paused) ostAudio.pause();
+    }else{
+      if(ostAudio.paused) ostAudio.play().catch(()=>{});
+    }
+  }catch(e){}
 }
 
 function toggleMusicMute(){
@@ -2447,12 +2450,13 @@ function renderWalls(){
 
       if(tile===DOOR_TILE){
         const d=doors.get(mapX+','+mapY);
-        if(d && d.open>=DOOR_FULLY_OPEN_AT) continue; // porta aperta → passa oltre
+        const openAmt=d?d.open:0;
+        if(openAmt>=DOOR_FULLY_OPEN_AT) continue;
         let wallX=(side===0)?(py+perp*rdy):(px+perp*rdx);
         wallX-=Math.floor(wallX);
-        if(d && wallX<d.open) continue; // gap → passa oltre
+        if(wallX<openAmt) continue;
         hitPerp=perp;
-        hitDoor={d,wallX};
+        hitDoor={openAmt,wallX};
         break;
       }
       hitPerp=perp;
@@ -2468,9 +2472,8 @@ function renderWalls(){
 
     let texX;
     if(hitDoor){
-      // Texture della porta scorrevole: campionamento offsettato
-      const off=hitDoor.d.open;
-      const u=(hitDoor.wallX-off)/(1-off);
+      const off=hitDoor.openAmt;
+      const u=(hitDoor.wallX-off)/Math.max(0.001,1-off);
       texX=Math.floor(u*TS);
     }else{
       let wallX=(side===0)?(py+hitPerp*rdy):(px+hitPerp*rdx);
@@ -2733,7 +2736,7 @@ function startGame(){
   deadScreen.classList.add('hidden');
   pauseScreen.classList.add('hidden');
   state='playing';
-  ostAudio.currentTime=0;
+  try{ if(ostAudio) ostAudio.currentTime=0; }catch(e){}
   syncMusic();
   if(!isTouch&&cvs.requestPointerLock)cvs.requestPointerLock();
 }

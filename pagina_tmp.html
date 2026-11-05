@@ -1004,11 +1004,30 @@ function genChunk(cx,cy){
   const g=new Uint8Array(CHUNK*CHUNK).fill(1);
   const set=(x,y,v)=>{if(x>=0&&x<CHUNK&&y>=0&&y<CHUNK)g[y*CHUNK+x]=v;};
   const doorMarks=new Set();
-  const markPassage=(x,y)=>{
+
+  // Porta orizzontale (muro sx/dx stanza, perpendicolare = Y):
+  // richiede entrambi i vicini sopra/sotto come MURI (esclude il caso stanza-bordo-lane "spalancata")
+  const markPassageH=(x,y)=>{
     if(x<0||x>=CHUNK||y<0||y>=CHUNK)return;
-    if(LANES.includes(x)&&LANES.includes(y))return; // no porte agli incroci
+    if(LANES.includes(x)&&LANES.includes(y))return;
     const idx=y*CHUNK+x;
-    if(g[idx]===0)doorMarks.add(idx); // marca il PASSAGGIO (tile 0)
+    if(g[idx]!==0)return;
+    const up=(y-1>=0)?g[(y-1)*CHUNK+x]:1;
+    const dn=(y+1<CHUNK)?g[(y+1)*CHUNK+x]:1;
+    if(up!==0 && dn!==0) doorMarks.add(idx);
+  };
+
+  // Porta verticale (muro alto/basso stanza, perpendicolare = X):
+  // richiede ALMENO UN vicino sx/dx come muro (esclude il caso porta-dentro-un'altra-stanza,
+  // ma accetta corridoio stretto adiacente a una lane)
+  const markPassageV=(x,y)=>{
+    if(x<0||x>=CHUNK||y<0||y>=CHUNK)return;
+    if(LANES.includes(x)&&LANES.includes(y))return;
+    const idx=y*CHUNK+x;
+    if(g[idx]!==0)return;
+    const lf=(x-1>=0)?g[y*CHUNK+(x-1)]:1;
+    const rt=(x+1<CHUNK)?g[y*CHUNK+(x+1)]:1;
+    if(lf!==0 || rt!==0) doorMarks.add(idx);
   };
 
   for(const x of LANES)for(let y=0;y<CHUNK;y++)set(x,y,0);
@@ -1029,10 +1048,18 @@ function genChunk(cx,cy){
     for(let x=Math.min(mcx,tx);x<=Math.max(mcx,tx);x++)set(x,mcy,0);
     for(let y=Math.min(mcy,ty);y<=Math.max(mcy,ty);y++)set(tx,y,0);
 
-    if(tx<rx) markPassage(rx-1,mcy);
-    else if(tx>=rx+w) markPassage(rx+w,mcy);
-    if(ty<ry) markPassage(tx,ry-1);
-    else if(ty>=ry+h) markPassage(tx,ry+h);
+    // Porta orizzontale: la lane deve essere FUORI dalla stanza (a sx o dx)
+    if(tx<rx) markPassageH(rx-1,mcy);
+    else if(tx>=rx+w) markPassageH(rx+w,mcy);
+
+    // Porta verticale: SOLO se la colonna del corridoio verticale (tx) cade
+    // dentro la fascia orizzontale della stanza. Altrimenti tx è fuori,
+    // e (tx, ry±1) sarebbe un tile in mezzo a un corridoio, non un ingresso.
+    const txInside = (tx>=rx && tx<rx+w);
+    if(txInside){
+      if(ty<ry) markPassageV(tx,ry-1);
+      else if(ty>=ry+h) markPassageV(tx,ry+h);
+    }
   }
 
   const pillars=2+Math.floor(rng()*2);
